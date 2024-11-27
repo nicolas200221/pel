@@ -103,6 +103,10 @@ struct trie {
     /* destructor */
     ~trie();
 
+    #pragma region test //delete this section
+    void print();
+    #pragma endregion
+
     /* assignment operators */
     trie<T>& operator=(trie<T> const&);
     trie<T>& operator=(trie<T>&&);
@@ -161,3 +165,12 @@ std::ostream& operator<<(std::ostream&, trie<T> const&);
 
 template <typename T>
 std::istream& operator>>(std::istream&, trie<T>&);
+
+#pragma region test //delete this section
+template <typename T>
+void trie<T>::print(){
+    for(trie<T> i = m_p; i; i = m_c){
+        cout<<""
+    }
+}
+#pragma endregion
