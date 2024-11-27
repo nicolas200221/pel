@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Pel",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/pel",  // Il tuo eseguibile
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",  // Usa gdb come debugger (assicurati che sia installato)
+            "setupCommands": [
+                {
+                    "description": "Abilita la visualizzazione delle informazioni di debug",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",  // Percorso del debugger (modifica se necessario)
+            "preLaunchTask": "build",  // Nome del task di compilazione definito sotto
+            "logging": {
+                "moduleLoad": false,
+                "trace": true,
+                "engineLogging": false
+            },
+            "visualizerFile": "${workspaceFolder}/.vscode/launch.json"
+        }
+    ]
+}
