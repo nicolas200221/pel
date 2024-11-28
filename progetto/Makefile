@@ -12,10 +12,11 @@ OBJ_EXT = o
 
 # Flag per il compilatore
 CXX = g++
-CXXFLAGS = -std=c++17 -I$(INC_DIR) -g
+CXXFLAGS = -std=c++17 -I$(INC_DIR) -g -O0
 
 # Trova tutti i file .cpp in src/ e li trasforma in file .o
-SRC_FILES = $(wildcard $(SRC_DIR)/*.$(SRC_EXT))
+SRC_FILES = $(wildcard $(SRC_DIR)/*.$(SRC_EXT)) \
+            $(wildcard $(SRC_DIR)/tools/*.$(SRC_EXT))
 OBJ_FILES = $(SRC_FILES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/%.$(OBJ_EXT))
 
 # Dipendenze aggiuntive
@@ -25,23 +26,24 @@ DEPS = $(OBJ_FILES:.o=.d)
 all: $(TARGET)
 
 $(TARGET): $(OBJ_FILES)
-	@echo "Compilando il target finale $(TARGET)"
-	$(CXX) -o $@ $^
+	$(CXX) -std=c++17 -O0 -o $@ $^
 
 # Compilazione dei file .cpp in .o
 $(OBJ_DIR)/%.$(OBJ_EXT): $(SRC_DIR)/%.$(SRC_EXT)
-	@echo "Compilando $< in $@"
-	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(dir $@) # Crea la directory completa
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	@echo "Compilato $@"
 
 # Genera file di dipendenze .d
-$(OBJ_DIR)/%.d: $(SRC_DIR)/%.$(SRC_EXT)
-	@echo "Generando dipendenze per $<"
-	@mkdir -p $(OBJ_DIR)
+$(OBJ_DIR)/tools/%.d: $(SRC_DIR)/tools/%.$(SRC_EXT)
+	@mkdir -p $(dir $@)
 	$(CXX) -MM $(CXXFLAGS) $< > $@
-	@sed -i 's|\($*\)\.o[ :]*|$(OBJ_DIR)/\1.o $(OBJ_DIR)/\1.d : |g' $@
-	@echo "Dipendenze per $< generate in $@"
+	@sed -i 's|^\($*\)\.o[ :]*|$(OBJ_DIR)/tools/\1.o $(OBJ_DIR)/tools/\1.d : |g' $@
+
+# Genera file di dipendenze per i file in src/
+$(OBJ_DIR)/%.d: $(SRC_DIR)/%.$(SRC_EXT)
+	@mkdir -p $(dir $@)
+	$(CXX) -MM $(CXXFLAGS) $< > $@
+	@sed -i 's|^\($*\)\.o[ :]*|$(OBJ_DIR)/\1.o $(OBJ_DIR)/\1.d : |g' $@
 
 # Includi i file di dipendenze
 -include $(DEPS)

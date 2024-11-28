@@ -63,21 +63,20 @@ void bag<T>::Impl::destroy(Pcell head) const{
 template <typename T>
 bag<T>::bag(){
     Pimpl = new Impl();
-    Pimpl->head = new Cell{ T(), nullptr };
-    Pimpl->tail = Pimpl->head;
+    Pimpl->head = nullptr;
+    Pimpl->tail = nullptr;
 }
 
 template <typename T>
-bag<T>::bag(const bag& copy){
+bag<T>::bag(const bag<T>& copy) {
     Pimpl = new Impl();
     Pimpl->head = nullptr;
     Pimpl->tail = nullptr;
 
-    Pcell src = Pimpl->head;
-    Pcell dest = copy.Pimpl->head;
-    while(dest){
-        this->append(dest->key, dest->val);
-        dest = dest->next;
+    Pcell src = copy.Pimpl->head;
+    while (src) {
+        this->append(src->val);
+        src = src->next;
     }
 }
 
@@ -88,14 +87,12 @@ bag<T>::~bag(){
 }
 
 template <typename T>
-void bag<T>::append(T val){
-    if(Pimpl->head == Pimpl->tail){
-        Pimpl->head->val = val;
-        Pimpl->head->next = nullptr;
+void bag<T>::append(T val) {
+    Pcell newCell = new Cell{val, nullptr};
+    if (Pimpl->tail) {
+        Pimpl->tail->next = newCell;
+        Pimpl->tail = newCell;
     } else {
-        Pimpl->tail->next = new Cell;
-        Pimpl->tail = Pimpl->tail->next;
-        Pimpl->tail->val = val;
-        Pimpl->tail->next = nullptr;
+        Pimpl->head = Pimpl->tail = newCell;
     }
 }
