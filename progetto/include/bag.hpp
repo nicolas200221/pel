@@ -10,7 +10,26 @@ using namespace std;
  * container in this file.
  */
 
-template <typename T> class bag{
+template <typename T> class bag {
+    class iterator {
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using value_type = T;
+            using pointer = T*;
+            using reference = T&;
+
+            iterator(bag<T>*);
+            reference operator*() const;
+            pointer operator->() const;
+            iterator& operator++();
+            iterator operator++(int);
+            bool operator==(iterator const&) const;
+            bool operator!=(iterator const&) const;
+        
+        private:
+            bag<T>::Pcell cell_ptr;
+    };
+
     public:
         bag();
         bag(bag<T> const&);
@@ -44,6 +63,15 @@ void bag<T>::print(){
     cout<<"};\n";
 }
 #pragma endregion
+
+template <typename T>
+bag<T>::iterator::iterator(bag<T>* bag)
+    : cell_ptr(bag) {}
+
+template <typename T>
+T& bag<T>::iterator::operator*() const{
+    return cell_ptr->val;
+}
 
 template <typename T>
 struct bag<T>::Impl{

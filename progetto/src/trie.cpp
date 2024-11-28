@@ -15,3 +15,12 @@ trie<T>::~trie() {
 template <typename T>
 trie<T>::trie(double w)
     : m_p(nullptr), m_l(nullptr), m_c(), m_w(w) {}
+
+template <typename T>
+trie<T>::trie(trie<T> const& copy) {
+    this->m_l = copy.m_l;
+    this->m_w = copy.m_w;
+    for(auto& x : copy.m_c) {
+        
+    }
+}
