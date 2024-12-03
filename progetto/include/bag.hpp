@@ -27,7 +27,7 @@ template <typename T> class bag {
             bool operator!=(iterator const&) const;
         
         private:
-            bag<T>::Pcell current;
+            typename bag<T>::Pcell current;
     };
 
     public:
@@ -69,23 +69,23 @@ bag<T>::iterator::iterator(bag<T>* bag)
     : current(bag) {}
 
 template <typename T>
-bag<T>::iterator::reference bag<T>::iterator::operator*() const{
+typename bag<T>::iterator::reference bag<T>::iterator::operator*() const{
     return current->val;
 }
 
 template <typename T>
-bag<T>::iterator::pointer bag<T>::iterator::operator->() const{
+typename bag<T>::iterator::pointer bag<T>::iterator::operator->() const{
     return &(current->val);
 }
 
 template <typename T>
-bag<T>::iterator& bag<T>::iterator::operator++(){
+typename bag<T>::iterator& bag<T>::iterator::operator++(){
     if(current) current = current->next;
     return *this;
 }
 
 template <typename T>
-bag<T>::iterator bag<T>::iterator::operator++(int n){
+typename bag<T>::iterator bag<T>::iterator::operator++(int n){
     bag<T>::iterator temp = *this;
     ++(*this);
     return temp;

@@ -18,9 +18,10 @@ trie<T>::trie(double w)
 
 template <typename T>
 trie<T>::trie(trie<T> const& copy) {
-    this->m_l = copy.m_l;
-    this->m_w = copy.m_w;
     for(auto& x : copy.m_c) {
-        
+        this->m_l = copy.m_l;
+        this->m_w = copy.m_w;
+        this->m_c = new bag<trie<T>>;
+        this = this->m_c;
     }
 }
