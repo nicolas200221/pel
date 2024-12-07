@@ -39,10 +39,10 @@ template <typename T> class bag {
     //insertion methods
         void append(T);
         void prepend(T);
-        void insert_at(T);
+        void append_at(T, int);
 
     //get element
-        void at(int);
+        T at(int);
 
         #pragma region test // delete this section
 
@@ -53,6 +53,7 @@ template <typename T> class bag {
     private:
         struct Cell {
             T val;
+            Cell* prev;
             Cell* next;
         };
         typedef Cell* Pcell;
@@ -151,11 +152,49 @@ bag<T>::~bag(){
 
 template <typename T>
 void bag<T>::append(T val) {
-    Pcell newCell = new Cell{val, nullptr};
     if (Pimpl->tail) {
-        Pimpl->tail->next = newCell;
-        Pimpl->tail = newCell;
+        Pimpl->tail->next = new Cell { val, Pimpl->tail, nullptr };
+        Pimpl->tail = Pimpl->tail->next;
     } else {
-        Pimpl->head = Pimpl->tail = newCell;
+        Pimpl->head = Pimpl->tail = new Cell { val, nullptr, nullptr };
     }
+}
+
+template <typename T>
+void bag<T>::prepend(T val) {
+    Pcell newCell = new Cell { val, nullptr };
+    if (Pimpl->head) {
+        Pimpl->head->prev = new Cell { val, nullptr, Pimpl->head };
+        Pimpl->head = Pimpl->head->prev;
+    } else {
+        Pimpl->head = Pimpl->tail = new Cell { val, nullptr, nullptr };
+    }
+}
+
+template <typename T>
+void bag<T>::append_at(T val, int index) {
+    if(index < 0) return;
+    int i = 0;
+    Pcell cell = Pimpl->head;
+    while(i < index && cell){
+        cell = cell->next;
+        i++;
+    }
+    if(!cell) return;
+    Cell tmp = cell->next;
+    cell->next = new Cell { val, cell, tmp };
+}
+
+//guarda l'ultima richiesta fatta a chatgpt e includi l'handler che ti ha proposto, tanto lo dovevi implementare su trie.cpp
+template <typename T>
+T bag<T>::at(int index){
+    if(index < 0) return;
+    int i = 0;
+    Pcell cell = Pimpl->head;
+    while(i < index && cell){
+        cell = cell->next;
+        i++;
+    }
+    if(!cell) return;
+    else return cell->val;
 }

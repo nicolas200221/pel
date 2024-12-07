@@ -13,5 +13,9 @@ int main(){
     bagint.append(35);
     bagint.print();
     bag<int> bagintcopy(bagint);
+    cout<<"bagintcopy(2) = "<<bagintcopy.at(2)<<endl;
+    bagintcopy.append_at(50, 2);
+    cout<<"bagintcopy(2) = "<<bagintcopy.at(2)<<endl;
+    bagintcopy.print();
     return 0;
-}
+} 
