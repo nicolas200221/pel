@@ -31,11 +31,18 @@ template <typename T> class bag {
     };
 
     public:
+    //constructors
         bag();
         bag(bag<T> const&);
         ~bag();
+    
+    //insertion methods
+        void append(T);
+        void prepend(T);
+        void insert_at(T);
 
-        void append(T val);
+    //get element
+        void at(int);
 
         #pragma region test // delete this section
 
