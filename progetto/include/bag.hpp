@@ -42,7 +42,7 @@ template <typename T> class bag {
         void append_at(T, int);
 
     //get element
-        T at(int);
+        T* at(int);
 
         #pragma region test // delete this section
 
@@ -181,20 +181,20 @@ void bag<T>::append_at(T val, int index) {
         i++;
     }
     if(!cell) return;
-    Cell tmp = cell->next;
+    Pcell tmp = cell->next;
     cell->next = new Cell { val, cell, tmp };
 }
 
-//guarda l'ultima richiesta fatta a chatgpt e includi l'handler che ti ha proposto, tanto lo dovevi implementare su trie.cpp
 template <typename T>
-T bag<T>::at(int index){
-    if(index < 0) return;
+T* bag<T>::at(int index) {
+    if (index < 0) return nullptr;
+    if (index == 0) return &Pimpl->head->val;
     int i = 0;
     Pcell cell = Pimpl->head;
-    while(i < index && cell){
+    while (i < index && cell) {
         cell = cell->next;
         i++;
     }
-    if(!cell) return;
-    else return cell->val;
+    if (!cell) return nullptr;
+    return &cell->val;
 }
