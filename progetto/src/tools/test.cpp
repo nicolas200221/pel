@@ -17,7 +17,7 @@ int main(){
     bagint.insert(15);
     bagint.insert(5);
     bagint.insert(42);
-    bagint.insert(35);
+    bagint.insert(37);
     bagint.print();
     bag<int> bagintcopy(bagint);
     cout<<"bagintcopy(2) = "<<*(bagintcopy.at(2))<<endl;
