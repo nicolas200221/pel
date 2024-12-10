@@ -37,9 +37,9 @@ template <typename T> class bag {
         ~bag();
     
     //insertion methods
-        void append(T);
-        void prepend(T);
-        void append_at(T, int);
+        //void append_at(T, int);
+        void insert(T);
+        //void insert_at(T, int);
 
     //get element
         T* at(int);
@@ -49,7 +49,7 @@ template <typename T> class bag {
         void print();
 
         #pragma endregion
-
+    
     private:
         struct Cell {
             T val;
@@ -60,6 +60,9 @@ template <typename T> class bag {
 
         struct Impl;
         Impl* Pimpl;
+
+        void append(T);
+        void prepend(T);
 };
 
 #pragma region test //delete this section
@@ -171,9 +174,13 @@ void bag<T>::prepend(T val) {
     }
 }
 
-template <typename T>
+/* template <typename T>
 void bag<T>::append_at(T val, int index) {
     if(index < 0) return;
+    if(index == 0){
+        this->append(val);
+        return;
+    }
     int i = 0;
     Pcell cell = Pimpl->head;
     while(i < index && cell){
@@ -183,7 +190,49 @@ void bag<T>::append_at(T val, int index) {
     if(!cell) return;
     Pcell tmp = cell->next;
     cell->next = new Cell { val, cell, tmp };
+} */
+
+//non sempre da problemi, per esempio con il tipo char per qualche motivo smerda con i puntatori
+//mentre con l'int no, controlla e buone bestemmie!
+template <typename T>
+void bag<T>::insert(T val) {
+    Pcell cell = Pimpl->head;
+    bool found = false;
+    int index = 0;
+    while(cell && !found){
+        if(cell->val <= val){
+            cell = cell->next;
+            index++;
+        }
+        else found = true;
+    }
+    if(!cell) append(val);
+    else if(index == 0) prepend(val);
+    else{
+        Pcell tmp = cell;
+        cell = new Cell { val, tmp->prev, new Cell { tmp->val, cell, tmp->next } };
+        tmp->prev->next = cell;
+    }
 }
+
+/* template <typename T>
+void bag<T>::insert_at(T val, int index) {
+    if(index < 0) return;
+    if(index == 0){
+        this->append(val);
+        return;
+    }
+    int i = 0;
+    Pcell cell = Pimpl->head;
+    while(i < index && cell){
+        cell = cell->next;
+        i++;
+    }
+    if(!cell) return;
+    Pcell tmp = cell;
+    cell = new Cell { val, tmp->prev, new Cell { tmp->val, cell, tmp->next } };
+    tmp->prev->next = cell;
+} */
 
 template <typename T>
 T* bag<T>::at(int index) {
