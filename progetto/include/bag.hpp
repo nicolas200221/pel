@@ -35,6 +35,8 @@ template <typename T> class bag {
         bag();
         bag(bag<T> const&);
         ~bag();
+
+        void operator+=(T);
     
     //insertion methods
         void insert(T);
@@ -153,6 +155,11 @@ template <typename T>
 bag<T>::~bag(){
     Pimpl->destroy(Pimpl->head);
     delete Pimpl;
+}
+
+template <typename T>
+void bag<T>::operator+=(T value) {
+    this->insert(value);
 }
 
 template <typename T>

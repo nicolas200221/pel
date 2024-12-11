@@ -85,5 +85,5 @@ bag<trie<T>> const& trie<T>::get_children() const { return this->m_c; }
 template <typename T>
 void trie<T>::add_child(trie<T> const& c) {
     this->m_w = 0.0;
-
+    this->m_c += c;
 }
