@@ -85,12 +85,12 @@ bag<T>::iterator::iterator(bag<T>* bag)
 
 template <typename T>
 typename bag<T>::iterator::reference bag<T>::iterator::operator*() const{
-    return current->val;
+    return current;
 }
 
 template <typename T>
 typename bag<T>::iterator::pointer bag<T>::iterator::operator->() const{
-    return &(current->val);
+    return &(current);
 }
 
 template <typename T>
