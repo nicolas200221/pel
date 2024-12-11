@@ -18,14 +18,14 @@ template <typename T> class bag {
             using pointer = T*;
             using reference = T&;
 
-            iterator(bag<T>*);
+            iterator(bag<T>::Pcell);
             reference operator*() const;
             pointer operator->() const;
             iterator& operator++();
             iterator operator++(int);
-            bool operator==(iterator const&) const;
-            bool operator!=(iterator const&) const;
-        
+            bool operator==(iterator const& other) const;
+            bool operator!=(iterator const& other) const;
+
         private:
             typename bag<T>::Pcell current;
     };
