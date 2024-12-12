@@ -18,13 +18,32 @@ template <typename T> class bag {
             using pointer = T*;
             using reference = T&;
 
-            iterator(bag<T>::Pcell);
+            iterator(typename bag<T>::Pcell cell) : current(cell) {}
             reference operator*() const;
             pointer operator->() const;
             iterator& operator++();
             iterator operator++(int);
             bool operator==(iterator const& other) const;
             bool operator!=(iterator const& other) const;
+
+        private:
+            typename bag<T>::Pcell current;
+    };
+
+    class const_iterator {
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using value_type = T;
+            using pointer = const T*;
+            using reference = const T&;
+
+            const_iterator(typename bag<T>::Pcell cell) : current(cell) {}
+            reference operator*() const;
+            pointer operator->() const;
+            const_iterator& operator++();
+            const_iterator operator++(int);
+            bool operator==(const_iterator const& other) const;
+            bool operator!=(const_iterator const& other) const;
 
         private:
             typename bag<T>::Pcell current;
@@ -37,7 +56,10 @@ template <typename T> class bag {
         ~bag();
 
         void operator+=(T);
-    
+        void operator=(bag<T> const&);
+        bag<T>& operator*() const;
+        bool empty() const;
+
     //insertion methods
         void insert(T);
         #pragma region delete
@@ -47,6 +69,11 @@ template <typename T> class bag {
 
     //get element
         T* at(int);
+
+        iterator begin();
+        iterator end();
+        const_iterator begin() const;
+        const_iterator end() const;
 
         #pragma region delete
 
@@ -78,43 +105,6 @@ void bag<T>::print(){
     cout<<"};\n";
 }
 #pragma endregion
-
-template <typename T>
-bag<T>::iterator::iterator(bag<T>* bag)
-    : current(bag) {}
-
-template <typename T>
-typename bag<T>::iterator::reference bag<T>::iterator::operator*() const{
-    return current;
-}
-
-template <typename T>
-typename bag<T>::iterator::pointer bag<T>::iterator::operator->() const{
-    return &(current);
-}
-
-template <typename T>
-typename bag<T>::iterator& bag<T>::iterator::operator++(){
-    if(current) current = current->next;
-    return *this;
-}
-
-template <typename T>
-typename bag<T>::iterator bag<T>::iterator::operator++(int n){
-    bag<T>::iterator temp = *this;
-    ++(*this);
-    return temp;
-}
-
-template <typename T>
-bool bag<T>::iterator::operator==(bag<T>::iterator const& other) const{
-    return current == other.current;
-}
-
-template <typename T>
-bool bag<T>::iterator::operator!=(bag<T>::iterator const& other) const{
-    return current != other.current;
-}
 
 template <typename T>
 struct bag<T>::Impl{
@@ -160,6 +150,29 @@ bag<T>::~bag(){
 template <typename T>
 void bag<T>::operator+=(T value) {
     this->insert(value);
+}
+
+template <typename T>
+void bag<T>::operator=(const bag<T>& copy) {
+    Pimpl->destroy(Pimpl->head);
+    Pimpl->head = nullptr;
+    Pimpl->tail = nullptr;
+
+    Pcell src = copy.Pimpl->head;
+    while (src) {
+        this->append(src->val);
+        src = src->next;
+    }
+}
+
+template <typename T>
+bag<T>& bag<T>::operator*() const {
+    return *const_cast<bag<T>*>(this);
+}
+
+template <typename T>
+bool bag<T>::empty() const {
+    return Pimpl->head == nullptr;
 }
 
 template <typename T>
@@ -255,4 +268,78 @@ T* bag<T>::at(int index) {
     }
     if (!cell) return nullptr;
     return &cell->val;
+}
+
+template <typename T>
+typename bag<T>::iterator::reference bag<T>::iterator::operator*() const {
+    return current->val;
+}
+template <typename T>
+typename bag<T>::iterator::pointer bag<T>::iterator::operator->() const {
+    return &(current->val);
+}
+template <typename T>
+typename bag<T>::iterator& bag<T>::iterator::operator++() {
+    if (current) 
+        current = current->next;
+    return *this;
+}
+template <typename T>
+typename bag<T>::iterator bag<T>::iterator::operator++(int) {
+    iterator tmp = *this;
+    ++(*this);
+    return tmp;
+}
+template <typename T>
+bool bag<T>::iterator::operator==(const iterator& other) const {
+    return current == other.current;
+}
+template <typename T>
+bool bag<T>::iterator::operator!=(const iterator& other) const {
+    return current != other.current;
+}
+template <typename T>
+typename bag<T>::iterator bag<T>::begin() {
+    return iterator(Pimpl->head);
+}
+template <typename T>
+typename bag<T>::iterator bag<T>::end() {
+    return iterator(nullptr);
+}
+
+template <typename T>
+typename bag<T>::const_iterator::reference bag<T>::const_iterator::operator*() const {
+    return current->val;
+}
+template <typename T>
+typename bag<T>::const_iterator::pointer bag<T>::const_iterator::operator->() const {
+    return &(current->val);
+}
+template <typename T>
+typename bag<T>::const_iterator& bag<T>::const_iterator::operator++() {
+    if (current) 
+        current = current->next;
+    return *this;
+}
+template <typename T>
+typename bag<T>::const_iterator bag<T>::const_iterator::operator++(int) {
+    const_iterator tmp = *this;
+    ++(*this);
+    return tmp;
+}
+template <typename T>
+bool bag<T>::const_iterator::operator==(const const_iterator& other) const {
+    return current == other.current;
+}
+template <typename T>
+bool bag<T>::const_iterator::operator!=(const const_iterator& other) const {
+    return current != other.current;
+}
+template <typename T>
+typename bag<T>::const_iterator bag<T>::begin() const {
+    return const_iterator(Pimpl->head);
+}
+template <typename T>
+typename bag<T>::const_iterator bag<T>::end() const {
+    return const_iterator(nullptr);
 }
