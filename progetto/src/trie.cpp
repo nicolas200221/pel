@@ -32,15 +32,27 @@ trie<T>::trie(trie<T> const& copy) {
 }
 
 template <typename T>
-trie<T>::trie(trie<T>&& rhs){
-    m_l = rhs.m_l;
-    m_c = std::move(rhs.m_c);
-    m_w = rhs.m_w;
-
+trie<T>::trie(trie<T>&& rhs)
+    : m_p(rhs.m_p), m_l(rhs.m_l), m_c(std::move(rhs.m_c)), m_w(rhs.m_w) {
     rhs.m_p = nullptr;
     rhs.m_l = nullptr;
-    rhs.m_c = bag<trie<T>>();
-    rhs.m_w = 0;
+    rhs.m_w = 0.0;
+}
+
+template <typename T>
+trie<T>& trie<T>::operator=(trie<T>&& rhs) {
+    if (this != &rhs) {
+        delete m_l;
+        m_c = std::move(rhs.m_c);
+        m_p = rhs.m_p;
+        m_l = rhs.m_l;
+        m_w = rhs.m_w;
+
+        rhs.m_p = nullptr;
+        rhs.m_l = nullptr;
+        rhs.m_w = 0.0;
+    }
+    return *this;
 }
 
 template <typename T>
@@ -59,18 +71,6 @@ trie<T>& trie<T>::operator=(trie<T> const& copy) {
         }
     }
     return *this;
-}
-
-template <typename T>
-trie<T>& trie<T>::operator=(trie<T>&& rhs){
-    m_l = rhs.m_l;
-    m_c = std::move(rhs.m_c);
-    m_w = rhs.m_w;
-
-    rhs.m_p = nullptr;
-    rhs.m_l = nullptr;
-    rhs.m_c = bag<trie<T>>();
-    rhs.m_w = 0;
 }
 
 template <typename T>
@@ -96,9 +96,29 @@ bag<trie<T>> const& trie<T>::get_children() const { return this->m_c; }
 
 template <typename T>
 void trie<T>::add_child(trie<T> const& c) {
-    this->m_w = 0.0;
-    this->m_c += c;
-    const_cast<trie<T>&>(c).m_p = this;
+    if (this != &c) {
+        trie<T> new_child = c;
+        new_child.m_p = this;
+        if (m_c.empty()) {
+            m_c += new_child;
+        } else {
+            bool inserted = false;
+            for (auto it = m_c.begin(); it != m_c.end(); ++it) {
+                if (*(new_child.m_l) < *(it->m_l)) {
+                    auto dist = 0;
+                    for (auto it2 = m_c.begin(); it2 != it; ++it2) {
+                        ++dist;
+                    }
+                    m_c.insert_at(new_child, dist);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) {
+                m_c += new_child;
+            }
+        }
+    }
 }
 
 //varie cose da sistemare spottate: while(equal) è stupido, è una funzione ricorsiva

@@ -61,9 +61,9 @@ template <typename T> class bag {
         bool empty() const;
 
     //insertion methods
-        void insert(T);
+        //void insert(T);
+        void insert_at(T, int);
         #pragma region delete
-        //void insert_at(T, int);
         //void append_at(T, int);
         #pragma endregion
 
@@ -149,7 +149,7 @@ bag<T>::~bag(){
 
 template <typename T>
 void bag<T>::operator+=(T value) {
-    this->insert(value);
+    this->append(value);
 }
 
 template <typename T>
@@ -196,7 +196,7 @@ void bag<T>::prepend(T val) {
     }
 }
 
-template <typename T>
+/* template <typename T>
 void bag<T>::insert(T val) {
     Pcell cell = Pimpl->head;
     bool found = false;
@@ -216,28 +216,37 @@ void bag<T>::insert(T val) {
         cell->prev = new_cell;
     }
 }
+ */
 
-#pragma region delete
-/* template <typename T>
+template <typename T>
 void bag<T>::insert_at(T val, int index) {
-    if(index < 0) return;
-    if(index == 0){
-        this->append(val);
+    if (index < 0) return;
+    if (index == 0) {
+        prepend(val);
         return;
     }
     int i = 0;
     Pcell cell = Pimpl->head;
-    while(i < index && cell){
+    while (i < index && cell) {
         cell = cell->next;
         i++;
     }
-    if(!cell) return;
-    Pcell tmp = cell;
-    cell = new Cell { val, tmp->prev, new Cell { tmp->val, cell, tmp->next } };
-    tmp->prev->next = cell;
+    if (!cell) {
+        append(val);
+        return;
+    }
+    Pcell new_cell = new Cell { val, cell->prev, cell };
+    if (cell->prev) {
+        cell->prev->next = new_cell;
+    }
+    cell->prev = new_cell;
+    if (index == 0) {
+        Pimpl->head = new_cell;
+    }
 }
 
-template <typename T>
+#pragma region delete
+/* template <typename T>
 void bag<T>::append_at(T val, int index) {
     if(index < 0) return;
     if(index == 0){
