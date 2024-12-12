@@ -59,6 +59,7 @@ template <typename T> class bag {
         void operator=(bag<T> const&);
         bag<T>& operator*() const;
         bool empty() const;
+        int get_size() const;
 
     //insertion methods
         //void insert(T);
@@ -82,6 +83,8 @@ template <typename T> class bag {
         #pragma endregion
     
     private:
+        int size;
+
         struct Cell {
             T val;
             Cell* prev;
@@ -126,6 +129,7 @@ bag<T>::bag(){
     Pimpl = new Impl();
     Pimpl->head = nullptr;
     Pimpl->tail = nullptr;
+    size = 0;
 }
 
 template <typename T>
@@ -172,27 +176,36 @@ bag<T>& bag<T>::operator*() const {
 
 template <typename T>
 bool bag<T>::empty() const {
-    return Pimpl->head == nullptr;
+    return !size;
+}
+
+template<typename T>
+int bag<T>::get_size() const {
+    return size;
 }
 
 template <typename T>
 void bag<T>::append(T val) {
-    if (Pimpl->tail) {
+    if (size > 0) {
         Pimpl->tail->next = new Cell { val, Pimpl->tail, nullptr };
         Pimpl->tail = Pimpl->tail->next;
+        size++;
     } else {
         Pimpl->head = Pimpl->tail = new Cell { val, nullptr, nullptr };
+        size++;
     }
 }
 
 template <typename T>
 void bag<T>::prepend(T val) {
     Pcell newCell = new Cell { val, nullptr };
-    if (Pimpl->head) {
+    if (size > 0) {
         Pimpl->head->prev = new Cell { val, nullptr, Pimpl->head };
         Pimpl->head = Pimpl->head->prev;
+        size++;
     } else {
         Pimpl->head = Pimpl->tail = new Cell { val, nullptr, nullptr };
+        size++;
     }
 }
 
@@ -240,9 +253,7 @@ void bag<T>::insert_at(T val, int index) {
         cell->prev->next = new_cell;
     }
     cell->prev = new_cell;
-    if (index == 0) {
-        Pimpl->head = new_cell;
-    }
+    size++;
 }
 
 #pragma region delete

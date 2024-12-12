@@ -121,31 +121,25 @@ void trie<T>::add_child(trie<T> const& c) {
     }
 }
 
-//varie cose da sistemare spottate: while(equal) è stupido, è una funzione ricorsiva
-//e non ha senso usare un while, spostare fuori da caso base il controllo di ml e mw
-//al posto di equal usare direttamente un return.
-//già modificata, guarda la foto sul telefono della lavagna di appunti.
 template <typename T>
 bool trie<T>::operator==(trie<T> const& copy) const {
-/*     trie<T>* src = this;
-    if(!src->m_c || copy.m_c){
-        if((src->m_l != copy.m_l) || (src->m_w != copy.m_w))
-            return false;
-        else return true;
+    // Check if labels and weights are equal
+    if ((m_l == nullptr && copy.m_l != nullptr) || (m_l != nullptr && copy.m_l == nullptr)) return false;
+    if (m_l != nullptr && copy.m_l != nullptr && *m_l != *copy.m_l) return false;
+    if (m_w != copy.m_w) return false;
+
+    // Check if the number of children is equal
+    if (m_c.get_size() != copy.m_c.get_size()) return false;
+
+    // Check if all children are equal
+    auto it1 = m_c.begin();
+    auto it2 = copy.m_c.begin();
+    while (it1 != m_c.end() && it2 != copy.m_c.end()) {
+        if (!(*it1 == *it2)) return false;
+        ++it1;
+        ++it2;
     }
 
-    bool equal = true;
-    while(equal){
-        if((src->m_l != copy.m_l) || (src->m_w != copy.m_w))
-            equal = false;
-        else {
-            for(auto record : copy.m_c){
-                src = src->m_c;
-                equal &= (src == record);
-            }
-        }
-    }
-    return equal; */
     return true;
 }
 
