@@ -137,6 +137,7 @@ bag<T>::bag(const bag<T>& copy) {
     Pimpl = new Impl();
     Pimpl->head = nullptr;
     Pimpl->tail = nullptr;
+    size = 0;
 
     Pcell src = copy.Pimpl->head;
     while (src) {
@@ -158,14 +159,17 @@ void bag<T>::operator+=(T value) {
 
 template <typename T>
 void bag<T>::operator=(const bag<T>& copy) {
-    Pimpl->destroy(Pimpl->head);
-    Pimpl->head = nullptr;
-    Pimpl->tail = nullptr;
+    if (this != &copy) {
+        Pimpl->destroy(Pimpl->head);
+        Pimpl->head = nullptr;
+        Pimpl->tail = nullptr;
+        size = 0;
 
-    Pcell src = copy.Pimpl->head;
-    while (src) {
-        this->append(src->val);
-        src = src->next;
+        Pcell src = copy.Pimpl->head;
+        while (src) {
+            this->append(src->val);
+            src = src->next;
+        }
     }
 }
 

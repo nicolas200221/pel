@@ -29,49 +29,61 @@
 }  */
 
 int main() {
-    // Crea due trie vuoti
-    trie<int> trie1;
-    trie<int> trie2;
+    
+    // Test bag<char>
+    bag<char> bagchar;
+    for (auto record : { 'a', 'z', 'b', 'h', 'g', 'l', 'e' })
+        bagchar += record;
+    bagchar.print();
 
-    // Confronto tra trie vuoti
-    if (trie1 == trie2) {
-        std::cout << "Trie vuoti sono uguali!" << std::endl;
-    } else {
-        std::cout << "Trie vuoti NON sono uguali!" << std::endl;
-    }
+    // Test bag<int>
+    bag<int> bagint;
+    for (auto record : { 20, 35, 10, 15, 5, 42, 37 })
+        bagint += record;
+    bagint.print();
 
-    // Aggiungi etichette, pesi e figli a trie1
-    trie1.set_label(new int(1));
-    trie1.set_weight(10.0);
+    // Test copy constructor and at() method
+    bag<int> bagintcopy(bagint);
+    cout << "bagintcopy(2) = " << *(bagintcopy.at(2)) << endl;
+    cout << "bagintcopy(3) = " << *(bagintcopy.at(3)) << endl;
+    cout << "bagintcopy(0) = " << *(bagintcopy.at(0)) << endl;
+    cout << "bagintcopy(15) = " << (bagintcopy.at(15) ? *(bagintcopy.at(15)) : -16384) << endl;
+    cout << "bagintcopy(-3) = " << (bagintcopy.at(-3) ? *(bagintcopy.at(-3)) : -16384) << endl;
+
+    // Test insert and operator+=
+    bagintcopy += 500;
+    bagintcopy += 25;
+    bagintcopy.print();
+
+    // Test bag<string>
+    bag<string> bagstring;
+    for (auto record : { "ciao", "prova", "11!", "xd", "diocan", "lol", "zzzzz" })
+        bagstring += record;
+    bagstring.print();
+
+    // Test trie<int>
+    trie<int> trieint;
+    trieint.set_weight(1.5);
+    int label = 10;
+    trieint.set_label(&label);
     trie<int> child1;
-    child1.set_label(new int(2));
-    child1.set_weight(5.0);
-    trie1.add_child(child1);
-
-    // Aggiungi etichette, pesi e figli a trie2 (identici a trie1)
-    trie2.set_label(new int(1));
-    trie2.set_weight(10.0);
+    child1.set_weight(2.5);
+    int child1_label = 20;
+    child1.set_label(&child1_label);
+    trieint.add_child(child1);
     trie<int> child2;
-    child2.set_label(new int(2));
-    child2.set_weight(5.0);
-    trie2.add_child(child2);
+    child2.set_weight(3.5);
+    int child2_label = 30;
+    child2.set_label(&child2_label);
+    trieint.add_child(child2);
 
-    // Confronto tra trie con stessi dati
-    if (trie1 == trie2) {
-        std::cout << "Trie con stessi dati sono uguali!" << std::endl;
-    } else {
-        std::cout << "Trie con stessi dati NON sono uguali!" << std::endl;
+    cout << "Trie root weight: " << trieint.get_weight() << endl;
+    cout << "Trie root label: " << *(trieint.get_label()) << endl;
+    cout << "Trie children count: " << trieint.get_children().get_size() << endl;
+
+    for (auto it = trieint.begin(); it != trieint.end(); ++it) {
+        cout << "Child weight: " << it.get_leaf().get_weight() << endl;
+        cout << "Child label: " << *(it.get_leaf().get_label()) << endl;
     }
-
-    // Modifica trie2 per renderlo diverso
-    trie2.set_weight(20.0);
-
-    // Confronto tra trie con dati diversi
-    if (trie1 == trie2) {
-        std::cout << "Trie con dati diversi sono uguali!" << std::endl;
-    } else {
-        std::cout << "Trie con dati diversi NON sono uguali!" << std::endl;
-    }
-
     return 0;
 }
