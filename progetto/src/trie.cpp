@@ -6,8 +6,8 @@ trie<T>::trie()
 
 template <typename T>
 trie<T>::~trie() {
-    for (auto& child : m_c){
-        delete &child;
+    for (auto& child : m_c) {
+        child.m_p = nullptr; // Avoid double deletion
     }
     delete m_l;
 }
@@ -84,15 +84,21 @@ void trie<T>::set_label(T* l) { this->m_l = l; }
 
 template <typename T>
 T const* trie<T>::get_label() const { return this->m_l; }
+template <typename T>
+T* trie<T>::get_label() { return this->m_l; }
 
 template <typename T>
 void trie<T>::set_parent(trie<T>* p) { this->m_p = p; }
 
 template <typename T>
 trie<T> const* trie<T>::get_parent() const { return this->m_p; }
+template <typename T>
+trie<T>* trie<T>::get_parent() { return this->m_p; }
 
 template <typename T>
 bag<trie<T>> const& trie<T>::get_children() const { return this->m_c; }
+template <typename T>
+bag<trie<T>>& trie<T>::get_children() { return this->m_c; }
 
 template <typename T>
 void trie<T>::add_child(trie<T> const& c) {
@@ -220,7 +226,14 @@ typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->() co
 }
 template <typename T>
 typename trie<T>::leaf_iterator& trie<T>::leaf_iterator::operator++() {
-    if (m_ptr) m_ptr = m_ptr->next;
+    if (m_ptr) {
+        auto it = m_ptr->m_c.begin();
+        if (it != m_ptr->m_c.end()) {
+            m_ptr = &(*it);
+        } else {
+            m_ptr = nullptr;
+        }
+    }
     return *this;
 }
 template <typename T>
@@ -260,7 +273,14 @@ typename trie<T>::const_leaf_iterator::pointer trie<T>::const_leaf_iterator::ope
 }
 template <typename T>
 typename trie<T>::const_leaf_iterator& trie<T>::const_leaf_iterator::operator++() {
-    if (m_ptr) m_ptr = m_ptr->next;
+    if (m_ptr) {
+        auto it = m_ptr->m_c.begin();
+        if (it != m_ptr->m_c.end()) {
+            m_ptr = &(*it);
+        } else {
+            m_ptr = nullptr;
+        }
+    }
     return *this;
 }
 template <typename T>
