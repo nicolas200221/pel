@@ -149,6 +149,8 @@ struct trie {
     /* facultative: path compression */
     void path_compress();
 
+    void print(std::ostream& os = std::cout, int depth = 0) const;
+
 private:
     trie<T>* m_p;      // parent
     T* m_l;            // label
@@ -161,3 +163,25 @@ std::ostream& operator<<(std::ostream&, trie<T> const&);
 
 template <typename T>
 std::istream& operator>>(std::istream&, trie<T>&);
+
+#pragma region delete
+template <typename T>
+void trie<T>::print(std::ostream& os, int depth) const {
+    std::string indent(depth * 2, ' ');
+    os << indent << (m_l ? *m_l : "root") << " " << m_w << " children = {";
+    if (!m_c.empty()) {
+        os << "\n";
+        for (auto it = m_c.begin(); it != m_c.end(); ++it) {
+            it->print(os, depth + 1);
+            auto next_it = it;
+            ++next_it;
+            if (next_it != m_c.end()) {
+                os << ",";
+            }
+            os << "\n";
+        }
+        os << indent;
+    }
+    os << "}\n";
+}
+#pragma endregion
