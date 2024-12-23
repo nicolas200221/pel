@@ -1,56 +1,67 @@
-# Nome del programma finale
-TARGET = pel
+# Compiler and flags
+CXX = g++
+CXXFLAGS = -std=c++17 -g -Iinclude -MMD -MP
 
-# Cartelle
+# Directories
 SRC_DIR = src
-INC_DIR = include
 OBJ_DIR = obj
 
-# Estensioni dei file
-SRC_EXT = cpp
-OBJ_EXT = o
+# Check operating system
+ifeq ($(OS),Windows_NT)
+    FIND_SRCS = $(shell powershell -ExecutionPolicy Bypass -File get_sources.ps1 $(SRC_DIR))
+    RM = cmd /C del /Q /F
+#windows removes folder with another command.
+	RMDIR = cmd /C rd /S /Q
+    MKDIR = mkdir
+    PATH_SEP = /
+else
+    FIND_SRCS = $(shell find $(SRC_DIR) -name '*.cpp')
+    RM = rm -rf
+    MKDIR = mkdir -p
+    PATH_SEP = /
+endif
 
-# Flag per il compilatore
-CXX = g++
-CXXFLAGS = -std=c++17 -I$(INC_DIR) -g -O0
+# Source files
+SRCS = $(FIND_SRCS)
+# Object files
+OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
+# Dependency files
+DEPS = $(OBJS:.o=.d)
 
-# Trova tutti i file .cpp in src/ e li trasforma in file .o
-SRC_FILES = $(wildcard $(SRC_DIR)/*.$(SRC_EXT)) \
-            $(wildcard $(SRC_DIR)/tools/*.$(SRC_EXT)) \
-            $(SRC_DIR)/trie.$(SRC_EXT)
-OBJ_FILES = $(SRC_FILES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/%.$(OBJ_EXT))
+# Target executable
+TARGET = pel
 
-# Dipendenze aggiuntive
-DEPS = $(OBJ_FILES:.o=.d)
-
-# Regola di default (compila il programma finale)
+# Default target
 all: $(TARGET)
 
-$(TARGET): $(OBJ_FILES)
+# Link object files to create the executable
+$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Compilazione dei file .cpp in .o
-$(OBJ_DIR)/%.$(OBJ_EXT): $(SRC_DIR)/%.$(SRC_EXT)
-	@mkdir -p $(dir $@) # Crea la directory completa
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
+# Compile source files to object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@echo "[COMPILE]: Compiling $< -> $@"
+	@$(MKDIR) $(dir $@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-# Genera file di dipendenze .d
-$(OBJ_DIR)/%.d: $(SRC_DIR)/%.$(SRC_EXT)
-	@mkdir -p $(dir $@)
-	$(CXX) -MM $(CXXFLAGS) $< > $@
-	@sed -i 's|^\($*\)\.o[ :]*|$(OBJ_DIR)/\1.o $(OBJ_DIR)/\1.d : |g' $@
-
-# Includi i file di dipendenze
+# Include dependency files
 -include $(DEPS)
 
-# Pulizia dei file generati
+# Clean up generated files
 clean:
-	@echo "Pulizia dei file generati..."
-	@if [ -d $(OBJ_DIR) ]; then rm -rf $(OBJ_DIR); fi
-	@if [ -f $(TARGET) ]; then rm $(TARGET); fi
-	@echo "Pulizia completata."
+ifeq ($(OS),Windows_NT)
+	@echo "[CLEAN]: Cleaning up generated files"
+	$(RM) $(TARGET).exe
+	$(RMDIR) $(OBJ_DIR)
+else
+	$(RM) $(OBJ_DIR) $(TARGET)
+endif
 
-# Se vuoi ricompilare tutto da zero
-rebuild: clean all
+# Debug target to print SRCS and OBJS for troubleshooting
+debug:
+	@echo "FIND_SRCS: $(FIND_SRCS)"
+	@echo "SRCS: $(SRCS)"
+	@echo "OBJS: $(OBJS)"
+	@echo "DEPS: $(DEPS)"
 
-.PHONY: all clean rebuild
+.PHONY: all clean debug

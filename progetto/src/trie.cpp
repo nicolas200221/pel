@@ -18,57 +18,84 @@ trie<T>::trie(double w)
 
 template <typename T>
 trie<T>::trie(trie<T> const& copy) {
-    m_l = copy.m_l;
+    m_p = nullptr; // The parent will be set when the node is added to a new parent
+    m_l = copy.m_l ? new T(*copy.m_l) : nullptr;
     m_w = copy.m_w;
-    if (!copy.m_c.empty()) {
-        m_c = *copy.m_c;
-        for (auto& child : m_c) {
-            child.m_p = this;
-            child = trie<T>(child);
-        }
-    } else {
-        m_c = bag<trie<T>>();
+
+    // Deep copy of children
+    for (const auto& child : copy.m_c) {
+        trie<T> new_child(child);
+        new_child.m_p = this; // Set the parent of the new child
+        m_c += new_child;
     }
+
+/*     // Debug print statements
+    std::cout << "Copy constructor called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
+    std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
 }
 
 template <typename T>
-trie<T>::trie(trie<T>&& rhs)
-    : m_p(rhs.m_p), m_l(rhs.m_l), m_c(std::move(rhs.m_c)), m_w(rhs.m_w) {
-    rhs.m_p = nullptr;
-    rhs.m_l = nullptr;
-    rhs.m_w = 0.0;
+trie<T>::trie(trie<T>&& other) {
+    m_p = other.m_p;
+    m_l = other.m_l;
+    m_c = std::move(other.m_c);
+    m_w = other.m_w;
+
+    other.m_p = nullptr;
+    other.m_l = nullptr;
+    other.m_w = 0.0;
+
+/*     // Debug print statements
+    std::cout << "Move constructor called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
+    std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
 }
 
 template <typename T>
-trie<T>& trie<T>::operator=(trie<T>&& rhs) {
-    if (this != &rhs) {
+trie<T>& trie<T>::operator=(trie<T>&& other) {
+    if (this != &other) {
+        // Clean up existing resources
         delete m_l;
-        m_c = std::move(rhs.m_c);
-        m_p = rhs.m_p;
-        m_l = rhs.m_l;
-        m_w = rhs.m_w;
+        m_c.clear();
 
-        rhs.m_p = nullptr;
-        rhs.m_l = nullptr;
-        rhs.m_w = 0.0;
+        // Move data from other
+        m_p = other.m_p;
+        m_l = other.m_l;
+        m_c = std::move(other.m_c);
+        m_w = other.m_w;
+
+        other.m_p = nullptr;
+        other.m_l = nullptr;
+        other.m_w = 0.0;
+
+/*         // Debug print statements
+        std::cout << "Move assignment operator called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
+        std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
     }
     return *this;
 }
 
 template <typename T>
-trie<T>& trie<T>::operator=(trie<T> const& copy) {
-    if (this != &copy) {
-        m_l = copy.m_l;
-        m_w = copy.m_w;
-        if (!copy.m_c.empty()) {
-            m_c = *copy.m_c;
-            for (auto& child : m_c) {
-                child.m_p = this;
-                child = trie<T>(child);
-            }
-        } else {
-            m_c = bag<trie<T>>();
+trie<T>& trie<T>::operator=(trie<T> const& other) {
+    if (this != &other) {
+        // Clean up existing resources
+        delete m_l;
+        m_c.clear();
+
+        // Copy data from other
+        m_p = nullptr; // The parent will be set when the node is added to a new parent
+        m_l = other.m_l ? new T(*other.m_l) : nullptr;
+        m_w = other.m_w;
+
+        // Deep copy of children
+        for (const auto& child : other.m_c) {
+            trie<T> new_child(child);
+            new_child.m_p = this; // Set the parent of the new child
+            m_c += new_child;
         }
+
+/*         // Debug print statements
+        std::cout << "Assignment operator called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
+        std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
     }
     return *this;
 }
@@ -80,7 +107,11 @@ template <typename T>
 double trie<T>::get_weight() const { return this->m_w; }
 
 template <typename T>
-void trie<T>::set_label(T* l) { this->m_l = l; }
+void trie<T>::set_label(T* l) {
+    m_l = l;
+/*     // Debug print statement
+    std::cout << "Label set to: " << (m_l ? *m_l : "null") << std::endl; */
+}
 
 template <typename T>
 T const* trie<T>::get_label() const { return this->m_l; }
@@ -103,8 +134,14 @@ bag<trie<T>>& trie<T>::get_children() { return this->m_c; }
 template <typename T>
 void trie<T>::add_child(trie<T> const& c) {
     if (this != &c) {
-        trie<T> new_child = c;
-        new_child.m_p = this;
+        // Create a deep copy of the subtree
+        trie<T> new_child(c);
+        new_child.set_parent(this); // Set the parent of the new child
+
+/*         // Debug print statements
+        std::cout << "Adding child with label: " << (new_child.m_l ? *new_child.m_l : "null") << std::endl;
+        std::cout << "Parent label: " << (this->m_l ? *this->m_l : "root") << std::endl; */
+
         if (m_c.empty()) {
             m_c += new_child;
         } else {
@@ -124,6 +161,12 @@ void trie<T>::add_child(trie<T> const& c) {
                 m_c += new_child;
             }
         }
+
+/*         // Verify parent and label after insertion
+        for (auto it = m_c.begin(); it != m_c.end(); ++it) {
+            std::cout << "Child label after insertion: " << (it->m_l ? *it->m_l : "null") << std::endl;
+            std::cout << "Child parent label after insertion: " << (it->m_p && it->m_p->m_l ? *it->m_p->m_l : "root") << std::endl;
+        } */
     }
 }
 
