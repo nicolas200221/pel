@@ -211,6 +211,7 @@ void bag<T>::prepend(T val) {
         Pimpl->head = Pimpl->tail = new Cell { val, nullptr, nullptr };
         size++;
     }
+    delete newCell;
 }
 
 /* template <typename T>
