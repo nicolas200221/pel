@@ -182,6 +182,6 @@ void trie<T>::print(std::ostream& os, int depth) const {
         }
         os << indent;
     }
-    os << "}\n";
+    os << "}";
 }
 #pragma endregion

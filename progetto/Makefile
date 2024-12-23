@@ -1,56 +1,42 @@
-# Nome del programma finale
-TARGET = pel
+# Compiler and flags
+CXX = g++
+CXXFLAGS = -std=c++17 -g -Iinclude -MMD -MP
 
-# Cartelle
+# Directories
 SRC_DIR = src
-INC_DIR = include
 OBJ_DIR = obj
 
-# Estensioni dei file
-SRC_EXT = cpp
-OBJ_EXT = o
+# Source files
+SRCS = $(shell find $(SRC_DIR) -name '*.cpp')
+# Object files
+OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+# Dependency files
+DEPS = $(OBJS:.o=.d)
 
-# Flag per il compilatore
-CXX = g++
-CXXFLAGS = -std=c++17 -I$(INC_DIR) -g -O0
+# Target executable
+TARGET = pel
 
-# Trova tutti i file .cpp in src/ e li trasforma in file .o
-SRC_FILES = $(wildcard $(SRC_DIR)/*.$(SRC_EXT)) \
-            $(wildcard $(SRC_DIR)/tools/*.$(SRC_EXT)) \
-            $(SRC_DIR)/trie.$(SRC_EXT)
-OBJ_FILES = $(SRC_FILES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/%.$(OBJ_EXT))
-
-# Dipendenze aggiuntive
-DEPS = $(OBJ_FILES:.o=.d)
-
-# Regola di default (compila il programma finale)
+# Default target
 all: $(TARGET)
 
-$(TARGET): $(OBJ_FILES)
+# Link object files to create the executable
+$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Compilazione dei file .cpp in .o
-$(OBJ_DIR)/%.$(OBJ_EXT): $(SRC_DIR)/%.$(SRC_EXT)
-	@mkdir -p $(dir $@) # Crea la directory completa
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-
-# Genera file di dipendenze .d
-$(OBJ_DIR)/%.d: $(SRC_DIR)/%.$(SRC_EXT)
+# Compile source files to object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) -MM $(CXXFLAGS) $< > $@
-	@sed -i 's|^\($*\)\.o[ :]*|$(OBJ_DIR)/\1.o $(OBJ_DIR)/\1.d : |g' $@
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-# Includi i file di dipendenze
+# Include dependency files
 -include $(DEPS)
 
-# Pulizia dei file generati
+# Clean up generated files
 clean:
-	@echo "Pulizia dei file generati..."
-	@if [ -d $(OBJ_DIR) ]; then rm -rf $(OBJ_DIR); fi
-	@if [ -f $(TARGET) ]; then rm $(TARGET); fi
-	@echo "Pulizia completata."
+ifeq ($(OS),Windows_NT)
+	del /Q $(subst /,\,$(OBJ_DIR)\*) $(TARGET).exe
+else
+	rm -rf $(OBJ_DIR) $(TARGET)
+endif
 
-# Se vuoi ricompilare tutto da zero
-rebuild: clean all
-
-.PHONY: all clean rebuild
+.PHONY: all clean
