@@ -17,13 +17,13 @@ trie<T>::trie(double w)
     : m_p(nullptr), m_l(nullptr), m_c(), m_w(w) {}
 
 template <typename T>
-trie<T>::trie(trie<T> const& copy) {
-    m_p = copy.m_p; // The parent will be set when the node is added to a new parent
-    m_l = copy.m_l ? new T(*copy.m_l) : nullptr;
-    m_w = copy.m_w;
+trie<T>::trie(trie<T> const& other) {
+    m_p = other.m_p;
+    m_l = other.m_l ? new T(*other.m_l) : nullptr;
+    m_w = other.m_w;
 
     // Deep copy of children
-    for (const auto& child : copy.m_c) {
+    for (const auto& child : other.m_c) {
         trie<T> new_child(child);
         new_child.m_p = this; // Set the parent of the new child
         m_c += new_child;
@@ -34,12 +34,45 @@ template <typename T>
 trie<T>::trie(trie<T>&& other) {
     m_p = other.m_p;
     m_l = other.m_l;
-    m_c = std::move(other.m_c);
     m_w = other.m_w;
+    m_c = std::move(other.m_c);
 
-    other.m_p = nullptr;
+    // Update parent pointers of the children
+    for (auto& child : m_c) {
+        child.m_p = this;
+    }
+
+    // Prevent the other node from deleting the moved resources
     other.m_l = nullptr;
-    other.m_w = 0.0;
+    other.m_c.clear();
+}
+
+template <typename T>
+trie<T>& trie<T>::operator=(trie<T> const& other) {
+    if (this != &other) {
+        // Create a temporary copy of the other node
+        trie<T> temp(other);
+
+        // Clean up existing resources
+        delete m_l;
+        m_c.clear();
+
+        // Move data from the temporary copy to this node
+        m_p = nullptr; // The parent will be set when the node is added to a new parent
+        m_l = temp.m_l;
+        m_w = temp.m_w;
+        m_c = std::move(temp.m_c);
+
+        // Update parent pointers of the children
+        for (auto& child : m_c) {
+            child.m_p = this;
+        }
+
+        // Prevent the temporary copy from deleting the moved resources
+        temp.m_l = nullptr;
+        temp.m_c.clear();
+    }
+    return *this;
 }
 
 template <typename T>
@@ -49,49 +82,35 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
         delete m_l;
         m_c.clear();
 
-        // Move data from other
-        m_p = other.m_p;
-        m_l = other.m_l;
-        m_c = std::move(other.m_c);
-        m_w = other.m_w;
-
-        other.m_p = nullptr;
-        other.m_l = nullptr;
-        other.m_w = 0.0;
-    }
-    return *this;
-}
-
-template <typename T>
-trie<T>& trie<T>::operator=(trie<T> const& other) {
-    if (this != &other) {
-        // Clean up existing resources
-        delete m_l;
-        m_c.clear();
-
-        // Copy data from other
+        // Move data from other to this node
         m_p = nullptr; // The parent will be set when the node is added to a new parent
-        m_l = other.m_l ? new T(*other.m_l) : nullptr;
+        m_l = other.m_l;
         m_w = other.m_w;
+        m_c = std::move(other.m_c);
 
-        // Deep copy of children
-        for (const auto& child : other.m_c) {
-            trie<T> new_child(child);
-            new_child.m_p = this; // Set the parent of the new child
-            m_c += new_child;
+        // Update parent pointers of the children
+        for (auto& child : m_c) {
+            child.m_p = this;
         }
+
+        // Prevent the other node from deleting the moved resources
+        other.m_l = nullptr;
+        other.m_c.clear();
     }
     return *this;
 }
 
 template <typename T>
-void trie<T>::set_weight(double w){ this->m_w = w; }
+void trie<T>::set_weight(double w) {
+    this->m_w = w;
+}
 
 template <typename T>
 double trie<T>::get_weight() const { return this->m_w; }
 
 template <typename T>
 void trie<T>::set_label(T* l) {
+    delete this->m_l;
     m_l = l;
 }
 
@@ -101,7 +120,10 @@ template <typename T>
 T* trie<T>::get_label() { return this->m_l; }
 
 template <typename T>
-void trie<T>::set_parent(trie<T>* p) { this->m_p = p; }
+void trie<T>::set_parent(trie<T>* p) { 
+    delete this->m_p;
+    this->m_p = p;
+}
 
 template <typename T>
 trie<T> const* trie<T>::get_parent() const { return this->m_p; }
