@@ -10,8 +10,7 @@ OBJ_DIR = obj
 ifeq ($(OS),Windows_NT)
     FIND_SRCS = $(shell powershell -ExecutionPolicy Bypass -File get_sources.ps1 $(SRC_DIR))
     RM = cmd /C del /Q /F
-#windows removes folder with another command.
-	RMDIR = cmd /C rd /S /Q
+    RMDIR = cmd /C rd /S /Q
     MKDIR = mkdir
     PATH_SEP = /
 else
@@ -34,15 +33,18 @@ TARGET = pel
 # Default target
 all: $(TARGET)
 
-# Link object files to create the executable
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+# Create object directory if it doesn't exist
+$(OBJ_DIR):
+	@if [ ! -d $(OBJ_DIR) ]; then $(MKDIR) $(OBJ_DIR); fi
 
-# Compile source files to object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+# Compile source files into object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	@echo "[COMPILE]: Compiling $< -> $@"
-	@$(MKDIR) $(dir $@)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Link object files into the target executable
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
 # Include dependency files
 -include $(DEPS)
@@ -54,7 +56,8 @@ ifeq ($(OS),Windows_NT)
 	$(RM) $(TARGET).exe
 	$(RMDIR) $(OBJ_DIR)
 else
-	$(RM) $(OBJ_DIR) $(TARGET)
+	$(RM) $(OBJS) $(DEPS) $(TARGET)
+	$(RMDIR) $(OBJ_DIR)
 endif
 
 # Debug target to print SRCS and OBJS for troubleshooting

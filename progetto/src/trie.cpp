@@ -18,7 +18,7 @@ trie<T>::trie(double w)
 
 template <typename T>
 trie<T>::trie(trie<T> const& copy) {
-    m_p = nullptr; // The parent will be set when the node is added to a new parent
+    m_p = copy.m_p; // The parent will be set when the node is added to a new parent
     m_l = copy.m_l ? new T(*copy.m_l) : nullptr;
     m_w = copy.m_w;
 
@@ -28,10 +28,6 @@ trie<T>::trie(trie<T> const& copy) {
         new_child.m_p = this; // Set the parent of the new child
         m_c += new_child;
     }
-
-/*     // Debug print statements
-    std::cout << "Copy constructor called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
-    std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
 }
 
 template <typename T>
@@ -44,10 +40,6 @@ trie<T>::trie(trie<T>&& other) {
     other.m_p = nullptr;
     other.m_l = nullptr;
     other.m_w = 0.0;
-
-/*     // Debug print statements
-    std::cout << "Move constructor called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
-    std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
 }
 
 template <typename T>
@@ -66,10 +58,6 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
         other.m_p = nullptr;
         other.m_l = nullptr;
         other.m_w = 0.0;
-
-/*         // Debug print statements
-        std::cout << "Move assignment operator called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
-        std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
     }
     return *this;
 }
@@ -92,10 +80,6 @@ trie<T>& trie<T>::operator=(trie<T> const& other) {
             new_child.m_p = this; // Set the parent of the new child
             m_c += new_child;
         }
-
-/*         // Debug print statements
-        std::cout << "Assignment operator called for trie with label: " << (m_l ? *m_l : "null") << std::endl;
-        std::cout << "Parent label: " << (m_p && m_p->m_l ? *m_p->m_l : "root") << std::endl; */
     }
     return *this;
 }
@@ -109,8 +93,6 @@ double trie<T>::get_weight() const { return this->m_w; }
 template <typename T>
 void trie<T>::set_label(T* l) {
     m_l = l;
-/*     // Debug print statement
-    std::cout << "Label set to: " << (m_l ? *m_l : "null") << std::endl; */
 }
 
 template <typename T>
@@ -138,10 +120,6 @@ void trie<T>::add_child(trie<T> const& c) {
         trie<T> new_child(c);
         new_child.set_parent(this); // Set the parent of the new child
 
-/*         // Debug print statements
-        std::cout << "Adding child with label: " << (new_child.m_l ? *new_child.m_l : "null") << std::endl;
-        std::cout << "Parent label: " << (this->m_l ? *this->m_l : "root") << std::endl; */
-
         if (m_c.empty()) {
             m_c += new_child;
         } else {
@@ -161,12 +139,6 @@ void trie<T>::add_child(trie<T> const& c) {
                 m_c += new_child;
             }
         }
-
-/*         // Verify parent and label after insertion
-        for (auto it = m_c.begin(); it != m_c.end(); ++it) {
-            std::cout << "Child label after insertion: " << (it->m_l ? *it->m_l : "null") << std::endl;
-            std::cout << "Child parent label after insertion: " << (it->m_p && it->m_p->m_l ? *it->m_p->m_l : "root") << std::endl;
-        } */
     }
 }
 
