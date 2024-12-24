@@ -33,18 +33,20 @@ TARGET = pel
 # Default target
 all: $(TARGET)
 
-# Create object directory if it doesn't exist
-$(OBJ_DIR):
-	@if [ ! -d $(OBJ_DIR) ]; then $(MKDIR) $(OBJ_DIR); fi
-
-# Compile source files into object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	@echo "[COMPILE]: Compiling $< -> $@"
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
 # Link object files into the target executable
 $(TARGET): $(OBJS)
+	@echo "[LINK]: Linking $@"
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+
+# Compile source files into object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@echo "[COMPILE]: Compiling $< -> $@"
+ifeq ($(OS),Windows_NT)
+	@if not exist $(dir $@) mkdir $(subst /,\,$(dir $@))
+else
+	@mkdir -p $(dir $@)
+endif
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Include dependency files
 -include $(DEPS)
@@ -53,11 +55,11 @@ $(TARGET): $(OBJS)
 clean:
 ifeq ($(OS),Windows_NT)
 	@echo "[CLEAN]: Cleaning up generated files"
-	$(RM) $(TARGET).exe
-	$(RMDIR) $(OBJ_DIR)
+    $(RM) $(TARGET).exe
+    $(RMDIR) $(OBJ_DIR)
 else
-	$(RM) $(OBJS) $(DEPS) $(TARGET)
-	$(RMDIR) $(OBJ_DIR)
+	@echo "[CLEAN]: Cleaning up generated files"
+	$(RM) $(OBJ_DIR) $(TARGET)
 endif
 
 # Debug target to print SRCS and OBJS for troubleshooting
