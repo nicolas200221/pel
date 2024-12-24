@@ -1,5 +1,6 @@
 #include "../trie.cpp"
 #include <sstream>
+#include <vector>
 
 // Custom to_string function
 template <typename T>
@@ -8,6 +9,11 @@ std::string to_string(const T& value) {
     oss << value;
     return oss.str();
 }
+
+// ANSI color codes
+const std::string RESET = "\033[0m";
+const std::string RED = "\033[31m";
+const std::string LIME = "\033[32m";
 
 void set_and_print(trie<std::string>& trie, const std::string& label, double weight = 0.0) {
     trie.set_label(new std::string(label));
@@ -21,6 +27,21 @@ void testTrieFunctions();   // forward declaration
 void testBagEdgeCases();    // forward declaration
 void testTrieEdgeCases();   // forward declaration
 
+bool all_tests_passed = true;
+std::vector<std::string> passed_tests;
+std::vector<std::string> failed_tests;
+
+void check_test(bool condition, const std::string& test_name) {
+    if (condition) {
+        std::cout << LIME << "OK" << RESET << " - " << test_name << "\n";
+        passed_tests.push_back(test_name);
+    } else {
+        std::cout << RED << "BAD" << RESET << " - " << test_name << "\n";
+        failed_tests.push_back(test_name);
+        all_tests_passed = false;
+    }
+}
+
 //test trie.
 int main() {
     std::cout << "\n--- Running Extended Tests ---\n\n";
@@ -33,35 +54,56 @@ int main() {
     std::cout << "\n";
     testTrieEdgeCases();
 
+    std::cout << "\n--- Test Summary ---\n\n";
+    std::cout << LIME << "Passed Tests:\n" << RESET;
+    for (const auto& test : passed_tests) {
+        std::cout << LIME << "OK" << RESET << " - " << test << "\n";
+    }
+
+    if (!failed_tests.empty()) {
+        std::cout << RED << "\nFailed Tests:\n" << RESET;
+        for (const auto& test : failed_tests) {
+            std::cout << RED << "BAD" << RESET << " - " << test << "\n";
+        }
+    }
+
+    if (all_tests_passed) {
+        std::cout << LIME << "\nAll tests passed!\n" << RESET;
+    } else {
+        std::cout << RED << "\nSome tests failed.\n" << RESET;
+    }
+
     return 0;
 }
 
 void testBagFunctions() {
     std::cout << "=== TEST BAG FUNCTIONS ===\n";
     bag<int> b1;
-    std::cout << "Initial b1.empty() = " << b1.empty() << ", b1.size() = " << b1.get_size() << "\n";
+    check_test(b1.empty(), "Initial b1.empty()");
+    check_test(b1.get_size() == 0, "Initial b1.size()");
 
     std::cout << "Adding elements to b1...\n";
     for (auto x : {1, 2, 3, 4, 5}) {
         b1 += x;
     }
     b1.print();
-    std::cout << "b1.size() = " << b1.get_size() << "\n\n";
+    check_test(b1.get_size() == 5, "b1.size() after adding elements");
 
     std::cout << "Inserting 99 at index 2...\n";
     b1.insert_at(99, 2);
     b1.print();
+    check_test(*b1.at(2) == 99, "b1.at(2) after inserting 99");
 
     std::cout << "Copy-constructing b2 from b1...\n";
     bag<int> b2(b1);
     b2.print();
-    std::cout << "b2.size() = " << b2.get_size() << "\n";
+    check_test(b2.get_size() == b1.get_size(), "b2.size() after copy-construction");
 
     std::cout << "Assigning b2 to b3...\n";
     bag<int> b3;
     b3 = b2;
     b3.print();
-    std::cout << "b3.size() = " << b3.get_size() << "\n\n";
+    check_test(b3.get_size() == b2.get_size(), "b3.size() after assignment");
 }
 
 void testTrieFunctions() {
@@ -85,8 +127,8 @@ void testTrieFunctions() {
 
     std::cout << "Testing operator== and operator!=...\n";
     trie<std::string> rootCopy(root);
-    std::cout << "root == rootCopy? " << (root == rootCopy) << "\n";
-    std::cout << "root != rootCopy? " << (root != rootCopy) << "\n";
+    check_test(root == rootCopy, "root == rootCopy");
+    check_test(!(root != rootCopy), "root != rootCopy");
 
     std::cout << "\nAdding a grandchild to child1...\n";
     trie<std::string> grandChild;
@@ -107,9 +149,13 @@ void testBagEdgeCases() {
     std::cout << "Testing negative index, large index, and empty bag...\n";
     bag<int> bagEmpty;
     bagEmpty.insert_at(999, -10); // Should do nothing
+    check_test(bagEmpty.empty(), "bagEmpty.empty() after invalid inserts");
+    check_test(bagEmpty.get_size() == 0, "bagEmpty.size() after invalid inserts");
+    bagEmpty.clear();
+    int size = bagEmpty.get_size();
     bagEmpty.insert_at(999, 999); // Should also do nothing
-    std::cout << "bagEmpty.empty() = " << bagEmpty.empty()
-              << ", bagEmpty.size() = " << bagEmpty.get_size() << "\n\n";
+    check_test(!bagEmpty.empty(), "!bagEmpty.empty() after out of range inserts");
+    check_test(bagEmpty.get_size() == size+1, "bagEmpty.size() after out of range inserts");
 
     std::cout << "Testing large inserts...\n";
     bag<int> bagLarge;
@@ -117,6 +163,7 @@ void testBagEdgeCases() {
         bagLarge += i;
     }
     bagLarge.print();
+    check_test(bagLarge.get_size() == 50, "bagLarge.size() after large inserts");
 
     std::cout << "\nTesting copy and assignment with large bag...\n";
     bag<int> bagLargeCopy(bagLarge);
@@ -124,10 +171,12 @@ void testBagEdgeCases() {
     bagLargeAssign = bagLarge;
     bagLargeCopy.print();
     bagLargeAssign.print();
+    check_test(bagLargeCopy.get_size() == bagLarge.get_size(), "bagLargeCopy.size() after copy-construction");
+    check_test(bagLargeAssign.get_size() == bagLarge.get_size(), "bagLargeAssign.size() after assignment");
 
     std::cout << "\nTrying at() with invalid indices...\n";
-    std::cout << "bagLarge.at(-1) = " << (bagLarge.at(-1) ? *bagLarge.at(-1) : -9999) << "\n";
-    std::cout << "bagLarge.at(9999) = " << (bagLarge.at(9999) ? *bagLarge.at(9999) : -9999) << "\n";
+    check_test(bagLarge.at(-1) == nullptr, "bagLarge.at(-1)");
+    check_test(bagLarge.at(9999) == nullptr, "bagLarge.at(9999)");
 }
 
 void testTrieEdgeCases() {
@@ -145,7 +194,7 @@ void testTrieEdgeCases() {
     boolTrie.add_child(childFalse);
     boolTrie.print(std::cout);
 
-    std::cout << "\nTesting a very deep trie of strings...\n";
+    std::cout << "\nTesting assigning children to its parent...\n";
     trie<std::string> deep;
     deep.set_label(new std::string("root"));
     trie<std::string> current(deep);
@@ -163,6 +212,21 @@ void testTrieEdgeCases() {
     std::cout << "\nTrying operator== and operator!= on partially-similar tries...\n";
     trie<std::string> almostSame(deep);
     almostSame.set_label(new std::string("almostRoot"));
-    std::cout << "deep == almostSame? " << (deep == almostSame) << "\n";
-    std::cout << "deep != almostSame? " << (deep != almostSame) << "\n";
+    check_test(!(deep == almostSame), "deep == almostSame");
+    check_test(deep != almostSame, "deep != almostSame");
+
+    std::cout << "\nTesting a very, very deep trie of strings...\n";
+    trie<std::string> veryDeep;
+    veryDeep.set_label(new std::string("root"));
+    trie<std::string>* newcurrent = &veryDeep;
+
+    for (int level = 1; level <= 200; ++level) {
+        trie<std::string> nextNode;
+        nextNode.set_label(new std::string("level_" + to_string(level)));
+        newcurrent->add_child(nextNode);
+        // For deep chaining:
+        auto& children = newcurrent->get_children();
+        newcurrent = &(*children.at(children.get_size() - 1));
+    }
+    veryDeep.print(std::cout);
 }
