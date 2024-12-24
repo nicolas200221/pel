@@ -165,6 +165,11 @@ bool trie<T>::operator==(trie<T> const& copy) const {
 }
 
 template <typename T>
+bool trie<T>::operator!=(trie<T> const& other) const {
+    return !(*this == other);
+}
+
+template <typename T>
 trie<T>::node_iterator::node_iterator(trie<T>* trie)
     : m_ptr(trie) {}
 template <typename T>

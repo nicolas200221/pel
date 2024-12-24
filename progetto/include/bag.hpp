@@ -60,6 +60,7 @@ template <typename T> class bag {
         bag<T>& operator*() const;
         bool empty() const;
         int get_size() const;
+        void clear();
 
     //insertion methods
         //void insert(T);
@@ -186,6 +187,14 @@ bool bag<T>::empty() const {
 template<typename T>
 int bag<T>::get_size() const {
     return size;
+}
+
+template <typename T>
+void bag<T>::clear() {
+    Pimpl->destroy(Pimpl->head);
+    Pimpl->head = nullptr;
+    Pimpl->tail = nullptr;
+    size = 0;
 }
 
 template <typename T>
