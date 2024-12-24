@@ -168,7 +168,12 @@ std::istream& operator>>(std::istream&, trie<T>&);
 template <typename T>
 void trie<T>::print(std::ostream& os, int depth) const {
     std::string indent(depth * 2, ' ');
-    os << indent << (m_l ? *m_l : "root") << " " << m_w << " children = {";
+    if (m_l) {
+        os << indent << *m_l;
+    } else {
+        os << indent << "root";
+    }
+    os << " " << m_w << " children = {";
     if (!m_c.empty()) {
         os << "\n";
         for (auto it = m_c.begin(); it != m_c.end(); ++it) {

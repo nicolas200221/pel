@@ -10,8 +10,7 @@ OBJ_DIR = obj
 ifeq ($(OS),Windows_NT)
     FIND_SRCS = $(shell powershell -ExecutionPolicy Bypass -File get_sources.ps1 $(SRC_DIR))
     RM = cmd /C del /Q /F
-#windows removes folder with another command.
-	RMDIR = cmd /C rd /S /Q
+    RMDIR = cmd /C rd /S /Q
     MKDIR = mkdir
     PATH_SEP = /
 else
@@ -34,15 +33,20 @@ TARGET = pel
 # Default target
 all: $(TARGET)
 
-# Link object files to create the executable
+# Link object files into the target executable
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	@echo "[LINK]: Linking $@"
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
-# Compile source files to object files
+# Compile source files into object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "[COMPILE]: Compiling $< -> $@"
-	@$(MKDIR) $(dir $@)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+ifeq ($(OS),Windows_NT)
+	@if not exist $(dir $@) mkdir $(subst /,\,$(dir $@))
+else
+	@mkdir -p $(dir $@)
+endif
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Include dependency files
 -include $(DEPS)
@@ -51,9 +55,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 clean:
 ifeq ($(OS),Windows_NT)
 	@echo "[CLEAN]: Cleaning up generated files"
-	$(RM) $(TARGET).exe
-	$(RMDIR) $(OBJ_DIR)
+    $(RM) $(TARGET).exe
+    $(RMDIR) $(OBJ_DIR)
 else
+	@echo "[CLEAN]: Cleaning up generated files"
 	$(RM) $(OBJ_DIR) $(TARGET)
 endif
 
