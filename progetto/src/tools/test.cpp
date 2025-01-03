@@ -112,12 +112,15 @@ void testTrieFunctions() {
     root.set_label(new std::string("root"));
     root.set_weight(0.0);
 
-    trie<std::string> child1, child2;
+    trie<std::string> child1, child2, grandChild2;
     child1.set_label(new std::string("child1"));
     child1.set_weight(1.0);
     child2.set_label(new std::string("child2"));
-    child2.set_weight(2.0);
+    child2.set_weight(0.0);
+    grandChild2.set_label(new std::string("grandChild2"));
+    grandChild2.set_weight(2.0);
 
+    child2.add_child(grandChild2);
     root.add_child(child1);
     root.add_child(child2);
 
@@ -141,6 +144,37 @@ void testTrieFunctions() {
     root.add_child(child1);
     root.print(std::cout);
     std::cout << "\n";
+
+    std::cout << "Testing operator[] on root...\n";
+    std::cout << "Setting path on {child2, grandChild}...\n";
+    std::vector<std::string> path = {"child2", "grandChild"};
+    trie<std::string>& result = root[path];
+    result.print(std::cout);
+    std::cout << "\n";
+    child2.print(std::cout);
+    std::cout << "\n";
+    check_test(result == child2, "root[path] == child2");
+
+    std::cout << "Testing operator[] on root...\n";
+    std::cout << "Setting path2 on {child2, grandChild2}...\n";
+    std::vector<std::string> path2 = {"child2", "grandChild2"};
+    trie<std::string>& result2 = root[path2];
+    result2.print(std::cout);
+    std::cout << "\n";
+    grandChild2.print(std::cout);
+    std::cout << "\n";
+    check_test(result2 == grandChild2, "root[path2] == grandChild2");
+
+    std::cout << "Testing operator[] on constroot...\n";
+    std::cout << "Setting path2 on {child3, grandChild4, child2}...\n";
+    const trie<std::string>& constRoot = root;
+    std::vector<std::string> path3 = {"child3", "grandChild4", "child2"};
+    const trie<std::string>& result3 = constRoot[path3];
+    result3.print(std::cout);
+    std::cout << "\n";
+    root.print(std::cout);
+    std::cout << "\n";
+    check_test(result3 == root, "root[path3] == root");
 }
 
 void testBagEdgeCases() {
