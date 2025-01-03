@@ -192,6 +192,30 @@ bool trie<T>::operator!=(trie<T> const& other) const {
 }
 
 template <typename T>
+trie<T>& trie<T>::operator[](std::vector<T> const& v) {
+    if(v.empty()) return *this;
+    for(auto it = m_c.begin(); it != m_c.end(); ++it) {
+        if(*(it->m_l) == v[0]) {
+            std::vector<T> new_v(v.begin() + 1, v.end());
+            return it->operator[](new_v);
+        }
+    }
+    return *this;
+}
+
+template <typename T>
+trie<T> const& trie<T>::operator[](std::vector<T> const& v) const {
+    if(v.empty()) return *this;
+    for(auto it = m_c.begin(); it != m_c.end(); ++it) {
+        if(*(it->m_l) == v[0]) {
+            std::vector<T> new_v(v.begin() + 1, v.end());
+            return it->operator[](new_v);
+        }
+    }
+    return *this;
+}
+
+template <typename T>
 trie<T>::node_iterator::node_iterator(trie<T>* trie)
     : m_ptr(trie) {}
 template <typename T>

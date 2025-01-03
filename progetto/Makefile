@@ -41,11 +41,7 @@ $(TARGET): $(OBJS)
 # Compile source files into object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "[COMPILE]: Compiling $< -> $@"
-ifeq ($(OS),Windows_NT)
-	@if not exist $(dir $@) mkdir $(subst /,\,$(dir $@))
-else
 	@mkdir -p $(dir $@)
-endif
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Include dependency files
@@ -55,11 +51,12 @@ endif
 clean:
 ifeq ($(OS),Windows_NT)
 	@echo "[CLEAN]: Cleaning up generated files"
-    $(RM) $(TARGET).exe
-    $(RMDIR) $(OBJ_DIR)
+	$(RM) $(TARGET).exe
+	$(RMDIR) $(OBJ_DIR)
 else
 	@echo "[CLEAN]: Cleaning up generated files"
-	$(RM) $(OBJ_DIR) $(TARGET)
+	$(RM) $(OBJS) $(DEPS) $(TARGET)
+	$(RMDIR) $(OBJ_DIR)
 endif
 
 # Debug target to print SRCS and OBJS for troubleshooting
