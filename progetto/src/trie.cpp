@@ -215,32 +215,48 @@ trie<T> const& trie<T>::operator[](std::vector<T> const& v) const {
     return *this;
 }
 
+// node_iterator
 template <typename T>
-trie<T>::node_iterator::node_iterator(trie<T>* trie)
-    : m_ptr(trie) {}
+trie<T>::node_iterator::node_iterator(trie<T>* ptr)
+    : m_ptr(ptr) {}
+
 template <typename T>
 typename trie<T>::node_iterator::reference trie<T>::node_iterator::operator*() const {
-    return *m_ptr;
+    static T default_value; // Default value for root node
+    if (m_ptr->m_l == nullptr) {
+        return default_value; // Return default value for root node
+    }
+    return *(m_ptr->m_l);
 }
+
 template <typename T>
 typename trie<T>::node_iterator::pointer trie<T>::node_iterator::operator->() const {
-    return m_ptr;
+    if (m_ptr->m_l == nullptr) {
+        return nullptr; // Return nullptr for root node
+    }
+    return m_ptr->m_l;
 }
+
 template <typename T>
 typename trie<T>::node_iterator& trie<T>::node_iterator::operator++() {
-    if (m_ptr) m_ptr = m_ptr->next;
+    if (m_ptr) {
+        m_ptr = m_ptr->m_p; // Move to parent node
+    }
     return *this;
 }
+
 template <typename T>
 typename trie<T>::node_iterator trie<T>::node_iterator::operator++(int) {
     node_iterator temp = *this;
     ++(*this);
     return temp;
 }
+
 template <typename T>
 bool trie<T>::node_iterator::operator==(node_iterator const& other) const {
     return m_ptr == other.m_ptr;
 }
+
 template <typename T>
 bool trie<T>::node_iterator::operator!=(node_iterator const& other) const {
     return m_ptr != other.m_ptr;
@@ -278,10 +294,11 @@ bool trie<T>::const_node_iterator::operator!=(const_node_iterator const& other) 
     return m_ptr != other.m_ptr;
 }
 
-// Leaf iterator
+// leaf_iterator
 template <typename T>
 trie<T>::leaf_iterator::leaf_iterator(trie<T>* leaf)
     : m_ptr(leaf) {}
+
 template <typename T>
 typename trie<T>::leaf_iterator::reference trie<T>::leaf_iterator::operator*() const {
     static T default_value; // Default value for root node
@@ -311,24 +328,29 @@ typename trie<T>::leaf_iterator& trie<T>::leaf_iterator::operator++() {
     }
     return *this;
 }
+
 template <typename T>
 typename trie<T>::leaf_iterator trie<T>::leaf_iterator::operator++(int) {
     leaf_iterator temp = *this;
     ++(*this);
     return temp;
 }
+
 template <typename T>
 bool trie<T>::leaf_iterator::operator==(leaf_iterator const& other) const {
     return m_ptr == other.m_ptr;
 }
+
 template <typename T>
 bool trie<T>::leaf_iterator::operator!=(leaf_iterator const& other) const {
     return m_ptr != other.m_ptr;
 }
+
 template <typename T>
 trie<T>::leaf_iterator::operator trie<T>::node_iterator() const {
     return node_iterator(m_ptr);
 }
+
 template <typename T>
 trie<T>& trie<T>::leaf_iterator::get_leaf() const {
     return *m_ptr;
@@ -338,6 +360,7 @@ trie<T>& trie<T>::leaf_iterator::get_leaf() const {
 template <typename T>
 trie<T>::const_leaf_iterator::const_leaf_iterator(trie<T> const* ptr)
     : m_ptr(ptr) {}
+
 template <typename T>
 typename trie<T>::const_leaf_iterator::reference trie<T>::const_leaf_iterator::operator*() const {
     static T default_value; // Default value for root node
@@ -393,24 +416,39 @@ trie<T> const& trie<T>::const_leaf_iterator::get_leaf() const {
 // Methods to return iterators
 template <typename T>
 typename trie<T>::leaf_iterator trie<T>::begin() {
-    return leaf_iterator(this);
+    // Find the first leaf in lexicographical order
+    trie<T>* current = this;
+    while (!current->m_c.empty()) {
+        current = &(*current->m_c.begin());
+    }
+    return leaf_iterator(current);
 }
+
 template <typename T>
 typename trie<T>::leaf_iterator trie<T>::end() {
     return leaf_iterator(nullptr);
 }
+
 template <typename T>
 typename trie<T>::node_iterator trie<T>::root() {
     return node_iterator(this);
 }
+
 template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::begin() const {
-    return const_leaf_iterator(this);
+    // Find the first leaf in lexicographical order
+    const trie<T>* current = this;
+    while (!current->m_c.empty()) {
+        current = &(*current->m_c.begin());
+    }
+    return const_leaf_iterator(current);
 }
+
 template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::end() const {
     return const_leaf_iterator(nullptr);
 }
+
 template <typename T>
 typename trie<T>::const_node_iterator trie<T>::root() const {
     return const_node_iterator(this);
