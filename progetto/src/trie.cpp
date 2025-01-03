@@ -284,12 +284,21 @@ trie<T>::leaf_iterator::leaf_iterator(trie<T>* leaf)
     : m_ptr(leaf) {}
 template <typename T>
 typename trie<T>::leaf_iterator::reference trie<T>::leaf_iterator::operator*() const {
-    return *m_ptr;
+    static T default_value; // Default value for root node
+    if (m_ptr->m_l == nullptr) {
+        return default_value; // Return default value for root node
+    }
+    return *(m_ptr->m_l);
 }
+
 template <typename T>
 typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->() const {
-    return m_ptr;
+    if (m_ptr->m_l == nullptr) {
+        return nullptr; // Return nullptr for root node
+    }
+    return m_ptr->m_l;
 }
+
 template <typename T>
 typename trie<T>::leaf_iterator& trie<T>::leaf_iterator::operator++() {
     if (m_ptr) {
@@ -331,12 +340,21 @@ trie<T>::const_leaf_iterator::const_leaf_iterator(trie<T> const* ptr)
     : m_ptr(ptr) {}
 template <typename T>
 typename trie<T>::const_leaf_iterator::reference trie<T>::const_leaf_iterator::operator*() const {
-    return *m_ptr;
+    static T default_value; // Default value for root node
+    if (m_ptr->m_l == nullptr) {
+        return default_value; // Return default value for root node
+    }
+    return *(m_ptr->m_l);
 }
+
 template <typename T>
 typename trie<T>::const_leaf_iterator::pointer trie<T>::const_leaf_iterator::operator->() const {
-    return m_ptr;
+    if (m_ptr->m_l == nullptr) {
+        return nullptr; // Return nullptr for root node
+    }
+    return m_ptr->m_l;
 }
+
 template <typename T>
 typename trie<T>::const_leaf_iterator& trie<T>::const_leaf_iterator::operator++() {
     if (m_ptr) {
