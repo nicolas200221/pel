@@ -1,6 +1,10 @@
 #include "../trie.cpp"
 #include <sstream>
 #include <vector>
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <ctime>
 
 // Custom to_string function
 template <typename T>
@@ -26,6 +30,8 @@ void testBagFunctions();    // forward declaration
 void testTrieFunctions();   // forward declaration
 void testBagEdgeCases();    // forward declaration
 void testTrieEdgeCases();   // forward declaration
+void testMaxFunction();     // forward declaration
+void generateRandomTrie(trie<std::string>& node, int depth, int maxDepth); // forward declaration
 
 bool all_tests_passed = true;
 std::vector<std::string> passed_tests;
@@ -53,6 +59,9 @@ int main() {
     testBagEdgeCases();
     std::cout << "\n";
     testTrieEdgeCases();
+
+    std::cout << "\n--- Testing max function on a large trie with random weights ---\n\n";
+    testMaxFunction();
 
     std::cout << "\n--- Test Summary ---\n\n";
     std::cout << LIME << "Passed Tests:\n" << RESET;
@@ -175,6 +184,12 @@ void testTrieFunctions() {
     root.print(std::cout);
     std::cout << "\n";
     check_test(result3 == root, "root[path3] == root");
+
+    std::cout << "Testing max() on root...\n";
+    trie<std::string>& max = root.max();
+    max.print(std::cout);
+    std::cout << "\n";
+    check_test(max == grandChild, "root.max() == grandChild");
 }
 
 void testBagEdgeCases() {
@@ -263,4 +278,39 @@ void testTrieEdgeCases() {
         newcurrent = &(*children.at(children.get_size() - 1));
     }
     veryDeep.print(std::cout);
+}
+
+void generateRandomTrie(trie<std::string>& node, int depth, int maxDepth) {
+    if (depth >= maxDepth) return;
+
+    int numChildren = std::rand() % 2 + 1; // Random number of children between 0 and 2
+    for (int i = 0; i < numChildren; ++i) {
+        trie<std::string> child;
+        child.set_label(new std::string("level_" + std::to_string(depth) + "_child_" + std::to_string(i)));
+        child.set_weight(static_cast<double>(std::rand()) / RAND_MAX);
+        node.add_child(child);
+        auto& children = node.get_children();
+        generateRandomTrie(*children.at(children.get_size() - 1), depth + 1, maxDepth);
+    }
+}
+
+void testMaxFunction() {
+    std::srand(std::time(nullptr)); // Seed for random number generation
+
+    trie<std::string> root;
+    root.set_label(new std::string("root"));
+    root.set_weight(static_cast<double>(std::rand()) / RAND_MAX);
+
+    // Generate a large trie with random weights
+    generateRandomTrie(root, 0, 8);
+
+    // Print the trie
+    std::cout << "Trie before finding max:\n";
+    root.print(std::cout);
+    std::cout << "\n";
+
+    // Find and print the max node
+    trie<std::string>& maxNode = root.max();
+    std::cout << "Max node weight: " << maxNode.get_weight() << "\n";
+    std::cout << "Max node label: " << *maxNode.get_label() << "\n";
 }

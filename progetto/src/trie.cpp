@@ -215,6 +215,40 @@ trie<T> const& trie<T>::operator[](std::vector<T> const& v) const {
     return *this;
 }
 
+template <typename T>
+trie<T>& trie<T>::max() {
+    if (m_c.empty()) return *this;
+    trie<T>* max_node = this;
+    for (auto it = m_c.begin(); it != m_c.end(); ++it) {
+        if (!it->m_c.empty()) {
+            trie<T>& child_max = it->max();
+            if (child_max.m_w > max_node->m_w) {
+                max_node = &child_max;
+            }
+        } else if (it->m_w > max_node->m_w) {
+            max_node = &(*it);
+        }
+    }
+    return *max_node;
+}
+
+template <typename T>
+trie<T> const& trie<T>::max() const {
+    if (m_c.empty()) return *this;
+    trie<T> const* max_node = this;
+    for (auto it = m_c.begin(); it != m_c.end(); ++it) {
+        if (!it->m_c.empty()) {
+            trie<T> const& child_max = it->max();
+            if (child_max.m_w > max_node->m_w) {
+                max_node = &child_max;
+            }
+        } else if (it->m_w > max_node->m_w) {
+            max_node = &(*it);
+        }
+    }
+    return *max_node;
+}
+
 // node_iterator
 template <typename T>
 trie<T>::node_iterator::node_iterator(trie<T>* ptr)
