@@ -1,5 +1,5 @@
 # Compiler and flags
-CXX = g++
+CXX = C:\msys64\mingw64\bin\g++.exe
 CXXFLAGS = -std=c++17 -g -Iinclude -MMD -MP
 
 # Directories

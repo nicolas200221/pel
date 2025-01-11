@@ -1,6 +1,346 @@
 #include "trie.hpp"  // It is forbidden to include other libraries!
 
 template <typename T>
+int constructor(const std::string&, trie<T>&);
+
+template <typename T>
+T parser_set_label(size_t*, size_t*, size_t, int, string);
+
+template <typename T>
+bool misspell(string);
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, trie<T> const& t) {
+    if(t.get_label() != nullptr) os << *t.get_label() << " children={ ";
+    else os << "children={ ";
+    const auto& children = t.get_children();
+    size_t count = 0;
+    for (const auto& child : children) {
+        if (!child.get_children().empty()) {
+            os << child;
+        } else {
+            os << *child.get_label() << " ";
+            if(child.get_weight() != 0.0) os << child.get_weight() << " ";
+            os << "children={}";
+        }
+        if (++count != children.get_size()) {
+            os << ", ";
+        }
+    }
+    os << "}";
+    return os;
+}
+
+template <typename T>
+std::istream& operator>>(std::istream& is, trie<T>& t) {
+    t = trie<T>(); // Reset the trie
+
+    std::string input;
+    std::string line;
+
+    // Read the entire file content
+    while (std::getline(is, line)) {
+        // Manually remove spaces, tabs, and newlines
+        std::string cleaned_line;
+        string buffer = "";
+        int label = 0;
+        int weight = 0;
+        for (char c : line) {
+            if (!std::isspace(static_cast<unsigned char>(c))) {
+                cleaned_line += c;
+                buffer += c;
+            } else {
+                bool is_weight = ((buffer.size() == 3) && (isdigit(buffer[0]) && buffer[1] == '.' && isdigit(buffer[2])));
+                bool is_valid = true;
+                if constexpr (!(std::is_same<T, double>::value)) {
+                    for(char b : buffer){
+                        if(!isalnum(b)) {
+                            is_valid = false;
+                            break;
+                        }
+                    }
+                } else is_valid = is_weight;
+                if(!buffer.empty() && !is_weight && is_valid && (buffer != "children")){
+                    if(label == 1) {
+                        if (misspell<T>(buffer)) throw parser_exception("Syntax error, found \"" + buffer + "\" did you mean \"children\"?");
+                        else throw parser_exception(" Only one label is allowed");
+                    } else label = 1;
+                } else if(is_weight){
+                    if(is_valid){
+                        if(label == 2) throw parser_exception("Only one label is allowed");
+                        else label++;
+                    } else {
+                        if(weight == 1) throw parser_exception("Only one weight is allowed");
+                        else weight++;
+                    }
+            } else {
+                label = 0;
+                weight = 0;
+            }
+            buffer = "";
+            }
+        }
+        input += cleaned_line;
+    }
+
+
+
+    // Parse the input string
+    if (input.substr(0, 8) != "children") throw parser_exception("Expected 'children' keyword at the beginning of the file");
+    if (input.size() < 10 || input[8] != '=' || input[9] != '{') throw parser_exception("Expected '={}' after 'children' keyword");
+    if (input.back() != '}') throw parser_exception("Expected '}' at the end of the file");
+
+    cout<<"input: "<<input<<endl;
+    constructor(input.substr(10, input.size() - 11), t);
+
+    return is;
+}
+
+//check if children keyword is misspelled by checking how far is from the original
+template <typename T>
+bool misspell(string s){
+    string children = "children";
+    int match = 0;
+    int next = 0;
+    int pos = 0;
+    for(char c : children){
+        size_t found = s.find(c);
+        if(found != string::npos){
+            if(found == (pos + 1)) next++;
+            match++;
+            pos = found;
+        }
+    }
+    if(match >= 3 && next >= 3) return true;
+    else return false;
+}
+
+template <typename T>
+int constructor(const std::string& s, trie<T>& t) {
+    bool is_leaf = false;
+    int pos = 0;
+    while(pos < s.size() - 1) {
+        T label;
+        double weight = 0.0;
+        trie<T> child;
+        const size_t WEIGHT_SIZE = 3;
+        size_t label_weight_size;
+        size_t label_size = 0;
+        //fix position if there were multiple node closing brackets before this one.
+        while(!isalpha(s[pos]) && s[pos - 1] == '}') pos++;
+        
+        label = parser_set_label<T>(&label_size, &label_weight_size, WEIGHT_SIZE, pos, s);
+
+        string weightstr = s.substr(pos + label_size, 3);
+
+        //check if leaf
+        if(isdigit(weightstr[0]) && weightstr[1] == '.' && isdigit(weightstr[2])){
+            const string LEAF_END = s.substr(pos + label_weight_size, 12);
+            bool not_last_child = (LEAF_END == "children={},");
+            bool last_child = (LEAF_END == "children={}}");
+            bool only_child = (LEAF_END == s.substr(pos + label_weight_size));
+            if(not_last_child || last_child || only_child){
+                is_leaf = true;
+                weight = stod(weightstr);
+                child.set_label(new T(label));
+                child.set_weight(weight);
+                t.add_child(child);
+            }
+            else if(s.substr(pos + label_weight_size, 11) == "children={}") throw parser_exception("Missing ',' after childs list");
+            else throw parser_exception("Syntax error on leaf definition, expected 'children={}', but found: " + s.substr(pos + label_weight_size, 11));
+        } else {
+            //check if node
+            if(s.substr(pos + label_size, 11) == "children={}")
+                throw parser_exception("Missing weight on leaf");
+            else {
+                if(s.substr(pos + label_size, 10) == "children={"){
+                    is_leaf = false;
+                    child.set_label(new T(label));
+                } else throw parser_exception("Syntax error on node definition, expected 'children={...}', but found: " + s.substr(pos + label_size, 10));
+            }
+        }
+        //if node is a leaf, skip to the next node, else call recursively constructor on the node to add its child.
+        if(is_leaf) pos += label_weight_size + 12; // 12("children={}," lenght).
+        else{
+            const int ENTIRE_CHILDREN = pos + label_size + 10; // 10("children={" lenght).
+            int temp_pos = ENTIRE_CHILDREN;
+            int nodes_encountered = 0;
+            string eof = std::string(s.size() - temp_pos, '}');
+            while((temp_pos < s.size()) && (s.substr(temp_pos) != eof) && nodes_encountered >= 0){
+                if(s[temp_pos] == '{' && s[temp_pos + 1] != '}') nodes_encountered++;
+                if(s[temp_pos] == '}'){
+                    if(s[temp_pos + 1] != '}'){
+                        if(s[temp_pos + 1] != ',')
+                            throw parser_exception("Missing ',' after childs list");
+                        if (!isalnum(s[temp_pos + 2])) throw parser_exception("Found illegal character at the end of trie<char> definition");
+                    }
+                }
+                if(s[temp_pos] == '}' && s[temp_pos + 1] == '}') nodes_encountered--;
+                else if(s[temp_pos] == '}' && s[temp_pos + 1] != ',') throw parser_exception("Missing ',' after childs list");
+                temp_pos++;
+                eof = std::string(s.size() - temp_pos, '}');
+            }
+            if(nodes_encountered >= 0){
+                if(s[temp_pos - 1] == '{') temp_pos++;
+                temp_pos += nodes_encountered;
+                if (s[temp_pos + 1] == ',') throw parser_exception("Found illegal character at the end of trie<char> definition");
+                pos += constructor(s.substr(ENTIRE_CHILDREN, (s.size() - 1) - (ENTIRE_CHILDREN)), child) + (label_size + 10); 
+                t.add_child(child);
+            } else {
+                if(isalpha(s[temp_pos + 1])) throw parser_exception("Missing ',' after childs list");
+                pos += constructor(s.substr(ENTIRE_CHILDREN, temp_pos - (ENTIRE_CHILDREN)), child) + (label_size + 10);
+                t.add_child(child);
+            }
+        }
+    }
+    return pos;
+}
+
+template <typename T>
+T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_SIZE, int pos, string s){
+    //extract label from string
+    auto extract_label = [=](std::string s, int pos) -> std::string {
+        int temp_pos = pos;
+        string label_temp = "";
+        string weight = "";
+        bool is_weight = false;
+        bool is_valid = false;
+        if constexpr (is_same<T, double>::value){
+            weight = s.substr(temp_pos + 3, 3);
+            is_weight = (temp_pos + 5 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
+            if(is_weight) {
+                (*label_size) = 3;
+                return s.substr(temp_pos, 3);
+            } else if (s.substr(temp_pos + 3, 8) == "children") {
+                (*label_size) = 3;
+                return s.substr(temp_pos, 3);;
+            }
+            is_valid = isalnum(s[temp_pos]);
+        } else {
+            if constexpr (is_same<T, std::string>::value) is_valid = !isdigit(s[temp_pos]);
+            else is_valid = isalnum(s[temp_pos]);
+            weight = s.substr(temp_pos, 3);
+            is_weight = (temp_pos + 2 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
+        }
+        while(is_valid && !is_weight && (s.substr(temp_pos, 8) != "children")){
+            label_temp += s[temp_pos];
+            (*label_size)++;
+            temp_pos++;
+            if constexpr (is_same<T, double>::value){
+                weight = s.substr(temp_pos + 3, 3);
+                is_weight = (temp_pos + 5 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
+            } else {
+                weight = s.substr(temp_pos, 3);
+                is_weight = (temp_pos + 2 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
+            }
+        }
+        return label_temp;
+    };
+
+    //check if children keyword is misspelled
+    auto children_misspell = [=](std::string s, int pos) -> void {
+        //try to extract children keyword from string
+        auto extract_children_keyword = [&](string s, int& pos, bool& delimiter, bool& is_weight) -> string {
+            string children_temp = "";
+            string children_check = s.substr(pos, 8);
+            bool end_children = false;
+            while((pos < s.size()) && !delimiter && !is_weight && (children_check != "children")){
+                string weight = "";
+                if constexpr (is_same<T, double>::value){
+                    if (!end_children && (s[pos+3] != '=' && s[pos+3] != '{' && s[pos+3] != '}' && s[pos+3] != ',')){
+                        weight = s.substr(pos + 3, 3);
+                        is_weight = (pos + 5 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
+                    } else end_children = true;
+                } else {
+                    weight = s.substr(pos, 3);
+                    is_weight = (pos + 2 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
+                }
+                if(!is_weight){
+                    if (s[pos] == '=' || s[pos] == '{' || s[pos] == '}' || s[pos] == ',')
+                        delimiter = true;
+                    else {
+                        children_temp += s[pos];
+                        pos++;
+                        children_check = s.substr(pos, 8);
+                    }
+                }
+            }
+            if(children_check == "children") return children_check;
+            else return children_temp;
+        };
+
+        const string children = "children";
+        bool delimiter = false;
+        bool is_weight = false;
+        string children_temp = "";
+        children_temp = extract_children_keyword(s, pos, delimiter, is_weight);
+        //if there is a weight, check again skipping the weight
+        if(is_weight){
+            delimiter = false;
+            is_weight = false;
+            pos += 3;
+            children_temp = extract_children_keyword(s, pos, delimiter, is_weight);
+            if(children_temp != children)
+                throw parser_exception("Syntax error, found \"" + children_temp + "\" did you mean \"" + children + "\"?");
+        } else {
+            string extracted_keyword = "";
+            if(children_temp.size() >= children.size())
+                extracted_keyword = children_temp.substr(children_temp.size() - children.size(), children.size());
+            else extracted_keyword = children_temp;
+            if(extracted_keyword != children)
+                throw parser_exception("Syntax error, found \"" + extracted_keyword + "\" did you mean \"" + children + "\"?");
+        }
+    };
+
+    if constexpr (std::is_same<T, char>::value){
+        (*label_size) = 0;
+        children_misspell(s, pos);
+        string label_temp = extract_label(s, pos);
+        *label_weight_size = (*label_size) + WEIGHT_SIZE;
+        if ((*label_size) == 1) {
+            if(!isalpha(label_temp[0]))
+                throw parser_exception("Label on trie<char> should be a letter, but found: " + label_temp);
+            else return label_temp[0];
+        } else 
+            throw parser_exception("Label on trie<char> should be a single letter, but found: " + label_temp);
+    }
+
+    if constexpr (std::is_same<T, std::string>::value){
+        (*label_size) = 0;
+        children_misspell(s, pos);
+        string label_temp = extract_label(s, pos);
+        (*label_weight_size) = (*label_size) + WEIGHT_SIZE;
+        return label_temp; 
+    }
+
+    if constexpr ((std::is_same<T, int>::value) || (std::is_same<T, bool>::value)){
+        (*label_size) = 0;
+        children_misspell(s, pos);
+        string label_temp = extract_label(s, pos);
+        *label_weight_size = *label_size + WEIGHT_SIZE;
+        if ((*label_size) == 1) {
+            if(!isdigit(label_temp[0]))
+                throw parser_exception("Label on trie<int> should be a digit, but found: " + label_temp);
+            else return (label_temp[0] - 48);
+        } else 
+            throw parser_exception("Label on trie<int> should be a single digit, but found: " + label_temp);
+    }
+
+    if constexpr (std::is_same<T, double>::value) {
+        *label_size = 0;
+        children_misspell(s, pos);
+        string label_temp = extract_label(s, pos);
+        *label_weight_size = *label_size + WEIGHT_SIZE;
+        if((*label_size) == 3){
+            if(!isdigit(label_temp[0]) || label_temp[1] != '.' || !isdigit(label_temp[2]))
+                throw parser_exception("Syntax error on trie<double> definition, label should be a double, but found: " + label_temp);
+            else return stod(label_temp);
+        } else 
+            throw parser_exception("Label on trie<double> should be of format \"x.x\", but found: " + label_temp);
+    }
+}
+
+template <typename T>
 trie<T>::trie() 
     : m_p(nullptr), m_l(nullptr), m_c(), m_w(0.0) {}
 
@@ -141,6 +481,16 @@ void trie<T>::add_child(trie<T> const& c) {
         // Create a deep copy of the subtree
         trie<T> new_child(c);
         new_child.set_parent(this); // Set the parent of the new child
+
+        // Check for duplicate labels among sibling nodes
+        for (const auto& child : m_c) {
+            if (*(new_child.m_l) == *(child.m_l)) {
+                cout << "Duplicate label found:" << endl;
+                cout << "new child:" << endl << new_child << endl;
+                cout << "Existing child:" << endl << child << endl;
+                throw parser_exception("Duplicate label found in sibling nodes");
+            }
+        }
 
         if (m_c.empty()) {
             m_c += new_child;

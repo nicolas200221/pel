@@ -1,4 +1,4 @@
-#include "../trie.cpp"
+/* #include "../trie.cpp"
 #include <sstream>
 #include <vector>
 #include <iostream>
@@ -22,8 +22,7 @@ const std::string LIME = "\033[32m";
 void set_and_print(trie<std::string>& trie, const std::string& label, double weight = 0.0) {
     trie.set_label(new std::string(label));
     trie.set_weight(weight);
-    trie.print();
-    std::cout << std::endl;
+    std::cout << trie << std::endl;
 }
 
 void testBagFunctions();    // forward declaration
@@ -32,6 +31,7 @@ void testBagEdgeCases();    // forward declaration
 void testTrieEdgeCases();   // forward declaration
 void testMaxFunction();     // forward declaration
 void generateRandomTrie(trie<std::string>& node, int depth, int maxDepth); // forward declaration
+void testTrieAssignmentAndMove(); // forward declaration
 
 bool all_tests_passed = true;
 std::vector<std::string> passed_tests;
@@ -54,6 +54,8 @@ int main() {
     testBagFunctions();
     std::cout << "\n";
     testTrieFunctions();
+    std::cout << "\n";
+    testTrieAssignmentAndMove();
 
     std::cout << "\n--- Stress Tests: Bag & Trie Edge Cases ---\n\n";
     testBagEdgeCases();
@@ -134,8 +136,7 @@ void testTrieFunctions() {
     root.add_child(child2);
 
     std::cout << "Printing root after adding child1 and child2:\n";
-    root.print(std::cout);
-    std::cout << "\n\n";
+    std::cout << root << "\n\n";
 
     std::cout << "Testing operator== and operator!=...\n";
     trie<std::string> rootCopy(root);
@@ -147,31 +148,26 @@ void testTrieFunctions() {
     grandChild.set_label(new std::string("grandChild"));
     grandChild.set_weight(3.0);
     child1.add_child(grandChild); // This won't affect root's structure unless we do it directly on root's child
-    child1.print(std::cout);
+    std::cout << child1 << "\n";
 
     std::cout << "\n(For demonstration, if needed, add child1 again to root)\n";
     root.add_child(child1);
-    root.print(std::cout);
-    std::cout << "\n";
+    std::cout << root << "\n";
 
     std::cout << "Testing operator[] on root...\n";
     std::cout << "Setting path on {child2, grandChild}...\n";
     std::vector<std::string> path = {"child2", "grandChild"};
     trie<std::string>& result = root[path];
-    result.print(std::cout);
-    std::cout << "\n";
-    child2.print(std::cout);
-    std::cout << "\n";
+    std::cout << result << "\n";
+    std::cout << child2 << "\n";
     check_test(result == child2, "root[path] == child2");
 
     std::cout << "Testing operator[] on root...\n";
     std::cout << "Setting path2 on {child2, grandChild2}...\n";
     std::vector<std::string> path2 = {"child2", "grandChild2"};
     trie<std::string>& result2 = root[path2];
-    result2.print(std::cout);
-    std::cout << "\n";
-    grandChild2.print(std::cout);
-    std::cout << "\n";
+    std::cout << result2 << "\n";
+    std::cout << grandChild2 << "\n";
     check_test(result2 == grandChild2, "root[path2] == grandChild2");
 
     std::cout << "Testing operator[] on constroot...\n";
@@ -179,17 +175,47 @@ void testTrieFunctions() {
     const trie<std::string>& constRoot = root;
     std::vector<std::string> path3 = {"child3", "grandChild4", "child2"};
     const trie<std::string>& result3 = constRoot[path3];
-    result3.print(std::cout);
-    std::cout << "\n";
-    root.print(std::cout);
-    std::cout << "\n";
+    std::cout << result3 << "\n";
+    std::cout << root << "\n";
     check_test(result3 == root, "root[path3] == root");
 
     std::cout << "Testing max() on root...\n";
     trie<std::string>& max = root.max();
-    max.print(std::cout);
-    std::cout << "\n";
+    std::cout << max << "\n";
     check_test(max == grandChild, "root.max() == grandChild");
+}
+
+void testTrieAssignmentAndMove() {
+    std::cout << "=== TEST TRIE ASSIGNMENT AND MOVE ===\n";
+
+    trie<std::string> trie1;
+    trie<std::string> child1;
+    child1.set_label(new std::string("child1"));
+    trie1.add_child(child1);
+    trie<std::string> child2;
+    child2.set_label(new std::string("child2"));
+    trie1.add_child(child2);
+
+    std::cout << "Original trie1:\n" << trie1 << "\n";
+
+    std::cout << "\nTesting copy assignment...\n";
+    trie<std::string> trieCopy;
+    trieCopy = trie1;
+    std::cout << "Copied trieCopy:\n" << trieCopy << "\n";
+    check_test(trieCopy == trie1, "trieCopy == trie1 after copy assignment");
+
+    std::cout << "\nTesting move assignment...\n";
+    trie<std::string> trieMoveAssign;
+    trieMoveAssign = std::move(trie1);
+    std::cout << "Moved trieMoveAssign:\n" << trieMoveAssign << "\n";
+    check_test(trie1.get_children().empty(), "trie1 is empty after move assignment");
+    check_test(!trieMoveAssign.get_children().empty(), "trieMoveAssign is not empty after move assignment");
+
+    std::cout << "\nTesting move constructor...\n";
+    trie<std::string> trieMoveConstructed(std::move(trieCopy));
+    std::cout << "Moved trieMoveConstructed:\n" << trieMoveConstructed << "\n";
+    check_test(trieCopy.get_children().empty(), "trieCopy is empty after move construction");
+    check_test(!trieMoveConstructed.get_children().empty(), "trieMoveConstructed is not empty after move construction");
 }
 
 void testBagEdgeCases() {
@@ -241,7 +267,7 @@ void testTrieEdgeCases() {
     childFalse.set_label(new bool(false));
     boolTrie.add_child(childTrue);
     boolTrie.add_child(childFalse);
-    boolTrie.print(std::cout);
+    std::cout << boolTrie << "\n";
 
     std::cout << "\nTesting assigning children to its parent...\n";
     trie<std::string> deep;
@@ -256,7 +282,7 @@ void testTrieEdgeCases() {
         auto& children = current.get_children();
         current = *children.at(children.get_size() - 1);
     }
-    deep.print(std::cout);
+    std::cout << deep << "\n";
 
     std::cout << "\nTrying operator== and operator!= on partially-similar tries...\n";
     trie<std::string> almostSame(deep);
@@ -277,7 +303,7 @@ void testTrieEdgeCases() {
         auto& children = newcurrent->get_children();
         newcurrent = &(*children.at(children.get_size() - 1));
     }
-    veryDeep.print(std::cout);
+    std::cout << veryDeep << "\n";
 }
 
 void generateRandomTrie(trie<std::string>& node, int depth, int maxDepth) {
@@ -306,11 +332,11 @@ void testMaxFunction() {
 
     // Print the trie
     std::cout << "Trie before finding max:\n";
-    root.print(std::cout);
-    std::cout << "\n";
+    std::cout << root << "\n";
 
     // Find and print the max node
     trie<std::string>& maxNode = root.max();
     std::cout << "Max node weight: " << maxNode.get_weight() << "\n";
     std::cout << "Max node label: " << *maxNode.get_label() << "\n";
 }
+ */

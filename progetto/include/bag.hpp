@@ -1,14 +1,13 @@
-#pragma region delete
-
-#include <iostream>
-using namespace std;
-
-#pragma endregion
 /*
  * Your implementation of the container bag<Val>.
  * Write both the declaration and definition of the
  * container in this file.
  */
+
+#pragma region delete
+#include <iostream>
+using namespace std;
+#pragma endregion
 
 template <typename T> class bag {
     class iterator {
@@ -63,11 +62,7 @@ template <typename T> class bag {
         void clear();
 
     //insertion methods
-        //void insert(T);
         void insert_at(T, int);
-        #pragma region delete
-        //void append_at(T, int);
-        #pragma endregion
 
     //get element
         T* at(int);
@@ -223,28 +218,6 @@ void bag<T>::prepend(T val) {
     delete newCell;
 }
 
-/* template <typename T>
-void bag<T>::insert(T val) {
-    Pcell cell = Pimpl->head;
-    bool found = false;
-    int index = 0;
-    while(cell && !found){
-        if(cell->val <= val){
-            cell = cell->next;
-            index++;
-        }
-        else found = true;
-    }
-    if(!cell) append(val);
-    else if(index == 0) prepend(val);
-    else{
-        Pcell new_cell = new Cell { val, cell->prev, cell };
-        cell->prev->next = new_cell;
-        cell->prev = new_cell;
-    }
-}
- */
-
 template <typename T>
 void bag<T>::insert_at(T val, int index) {
     if (index < 0) return;
@@ -269,26 +242,6 @@ void bag<T>::insert_at(T val, int index) {
     cell->prev = new_cell;
     size++;
 }
-
-#pragma region delete
-/* template <typename T>
-void bag<T>::append_at(T val, int index) {
-    if(index < 0) return;
-    if(index == 0){
-        this->append(val);
-        return;
-    }
-    int i = 0;
-    Pcell cell = Pimpl->head;
-    while(i < index && cell){
-        cell = cell->next;
-        i++;
-    }
-    if(!cell) return;
-    Pcell tmp = cell->next;
-    cell->next = new Cell { val, cell, tmp };
-} */
-#pragma endregion
 
 template <typename T>
 T* bag<T>::at(int index) {
