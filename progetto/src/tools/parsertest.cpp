@@ -31,7 +31,7 @@ int main() {
 }
 
 void trie_char(){
-    std::ifstream in("datasets/trie_char1.tr");
+    std::ifstream in("datasets/trie_char.tr");
     if (!in.is_open()) {
         std::cerr << "Unable to open file" << std::endl;
     }

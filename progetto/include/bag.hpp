@@ -1,14 +1,3 @@
-/*
- * Your implementation of the container bag<Val>.
- * Write both the declaration and definition of the
- * container in this file.
- */
-
-#pragma region delete
-#include <iostream>
-using namespace std;
-#pragma endregion
-
 template <typename T> class bag {
     class iterator {
         public:
@@ -71,12 +60,6 @@ template <typename T> class bag {
         iterator end();
         const_iterator begin() const;
         const_iterator end() const;
-
-        #pragma region delete
-
-        void print();
-
-        #pragma endregion
     
     private:
         int size;
@@ -94,16 +77,6 @@ template <typename T> class bag {
         void append(T);
         void prepend(T);
 };
-
-#pragma region delete
-template <typename T>
-void bag<T>::print(){
-    cout<<"bag:{\n";
-    for(Pcell i = Pimpl->head; i; i = i->next)
-        cout<<"\t[\n\t\tvalue: "<<i->val<<"\n\t\tnext: "<<i->next<<"\n\t],\n";
-    cout<<"};\n";
-}
-#pragma endregion
 
 template <typename T>
 struct bag<T>::Impl{
