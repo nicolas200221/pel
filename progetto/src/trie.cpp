@@ -90,7 +90,6 @@ std::istream& operator>>(std::istream& is, trie<T>& t) {
     if (input.size() < 10 || input[8] != '=' || input[9] != '{') throw parser_exception("Expected '={}' after 'children' keyword");
     if (input.back() != '}') throw parser_exception("Expected '}' at the end of the file");
 
-    std::cout<<"input: "<<input<<std::endl;
     constructor(input.substr(10, input.size() - 11), t);
 
     return is;
