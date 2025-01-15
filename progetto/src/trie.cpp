@@ -4,10 +4,10 @@ template <typename T>
 int constructor(const std::string&, trie<T>&);
 
 template <typename T>
-T parser_set_label(size_t*, size_t*, size_t, int, string);
+T parser_set_label(size_t*, size_t*, size_t, int, std::string);
 
 template <typename T>
-bool misspell(string);
+bool misspell(std::string);
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, trie<T> const& t) {
@@ -42,7 +42,7 @@ std::istream& operator>>(std::istream& is, trie<T>& t) {
     while (std::getline(is, line)) {
         // Manually remove spaces, tabs, and newlines
         std::string cleaned_line;
-        string buffer = "";
+        std::string buffer = "";
         int label = 0;
         int weight = 0;
         for (char c : line) {
@@ -52,7 +52,7 @@ std::istream& operator>>(std::istream& is, trie<T>& t) {
             } else {
                 bool is_weight = ((buffer.size() == 3) && (isdigit(buffer[0]) && buffer[1] == '.' && isdigit(buffer[2])));
                 bool is_valid = true;
-                if constexpr (!(std::is_same<T, double>::value)) {
+                if constexpr (!((std::is_same<T, double>::value) || (std::is_same<T, float>::value))) {
                     for(char b : buffer){
                         if(!isalnum(b)) {
                             is_valid = false;
@@ -90,7 +90,7 @@ std::istream& operator>>(std::istream& is, trie<T>& t) {
     if (input.size() < 10 || input[8] != '=' || input[9] != '{') throw parser_exception("Expected '={}' after 'children' keyword");
     if (input.back() != '}') throw parser_exception("Expected '}' at the end of the file");
 
-    cout<<"input: "<<input<<endl;
+    std::cout<<"input: "<<input<<std::endl;
     constructor(input.substr(10, input.size() - 11), t);
 
     return is;
@@ -98,14 +98,14 @@ std::istream& operator>>(std::istream& is, trie<T>& t) {
 
 //check if children keyword is misspelled by checking how far is from the original
 template <typename T>
-bool misspell(string s){
-    string children = "children";
+bool misspell(std::string s){
+    std::string children = "children";
     int match = 0;
     int next = 0;
     int pos = 0;
     for(char c : children){
         size_t found = s.find(c);
-        if(found != string::npos){
+        if(found != std::string::npos){
             if(found == (pos + 1)) next++;
             match++;
             pos = found;
@@ -127,15 +127,15 @@ int constructor(const std::string& s, trie<T>& t) {
         size_t label_weight_size;
         size_t label_size = 0;
         //fix position if there were multiple node closing brackets before this one.
-        while((s.size() > 0 && pos > 0) && (!isalpha(s[pos]) && s[pos - 1] == '}')) pos++;
+        while(!isalpha(s[pos]) && s[pos - 1] == '}') pos++;
         
         label = parser_set_label<T>(&label_size, &label_weight_size, WEIGHT_SIZE, pos, s);
 
-        string weightstr = s.substr(pos + label_size, 3);
+        std::string weightstr = s.substr(pos + label_size, 3);
 
         //check if leaf
         if(isdigit(weightstr[0]) && weightstr[1] == '.' && isdigit(weightstr[2])){
-            const string LEAF_END = s.substr(pos + label_weight_size, 12);
+            const std::string LEAF_END = s.substr(pos + label_weight_size, 12);
             bool not_last_child = (LEAF_END == "children={},");
             bool last_child = (LEAF_END == "children={}}");
             bool only_child = (LEAF_END == s.substr(pos + label_weight_size));
@@ -165,7 +165,7 @@ int constructor(const std::string& s, trie<T>& t) {
             const int ENTIRE_CHILDREN = pos + label_size + 10; // 10("children={" lenght).
             int temp_pos = ENTIRE_CHILDREN;
             int nodes_encountered = 0;
-            string eof = std::string(s.size() - temp_pos, '}');
+            std::string eof = std::string(s.size() - temp_pos, '}');
             while((temp_pos < s.size()) && (s.substr(temp_pos) != eof) && nodes_encountered >= 0){
                 if(s[temp_pos] == '{' && s[temp_pos + 1] != '}') nodes_encountered++;
                 if(s[temp_pos] == '}'){
@@ -197,15 +197,15 @@ int constructor(const std::string& s, trie<T>& t) {
 }
 
 template <typename T>
-T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_SIZE, int pos, string s){
+T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_SIZE, int pos, std::string s){
     //extract label from string
     auto extract_label = [=](std::string s, int pos) -> std::string {
         int temp_pos = pos;
-        string label_temp = "";
-        string weight = "";
+        std::string label_temp = "";
+        std::string weight = "";
         bool is_weight = false;
         bool is_valid = false;
-        if constexpr (is_same<T, double>::value){
+        if constexpr ((std::is_same<T, double>::value) || (std::is_same<T, float>::value)){
             weight = s.substr(temp_pos + 3, 3);
             is_weight = (temp_pos + 5 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
             if(is_weight) {
@@ -217,7 +217,7 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
             }
             is_valid = isalnum(s[temp_pos]);
         } else {
-            if constexpr (is_same<T, std::string>::value) is_valid = !isdigit(s[temp_pos]);
+            if constexpr (std::is_same<T, std::string>::value) is_valid = !isdigit(s[temp_pos]);
             else is_valid = isalnum(s[temp_pos]);
             weight = s.substr(temp_pos, 3);
             is_weight = (temp_pos + 2 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
@@ -226,7 +226,7 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
             label_temp += s[temp_pos];
             (*label_size)++;
             temp_pos++;
-            if constexpr (is_same<T, double>::value){
+            if constexpr ((std::is_same<T, double>::value) || (std::is_same<T, float>::value)){
                 weight = s.substr(temp_pos + 3, 3);
                 is_weight = (temp_pos + 5 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
             } else {
@@ -240,13 +240,13 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
     //check if children keyword is misspelled
     auto children_misspell = [=](std::string s, int pos) -> void {
         //try to extract children keyword from string
-        auto extract_children_keyword = [&](string s, int& pos, bool& delimiter, bool& is_weight) -> string {
-            string children_temp = "";
-            string children_check = s.substr(pos, 8);
+        auto extract_children_keyword = [&](std::string s, int& pos, bool& delimiter, bool& is_weight) -> std::string {
+            std::string children_temp = "";
+            std::string children_check = s.substr(pos, 8);
             bool end_children = false;
             while((pos < s.size()) && !delimiter && !is_weight && (children_check != "children")){
-                string weight = "";
-                if constexpr (is_same<T, double>::value){
+                std::string weight = "";
+                if constexpr ((std::is_same<T, double>::value) || (std::is_same<T, float>::value)){
                     if (!end_children && (s[pos+3] != '=' && s[pos+3] != '{' && s[pos+3] != '}' && s[pos+3] != ',')){
                         weight = s.substr(pos + 3, 3);
                         is_weight = (pos + 5 < s.size()) && (isdigit(weight[0]) && weight[1] == '.' && isdigit(weight[2]));
@@ -269,10 +269,10 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
             else return children_temp;
         };
 
-        const string children = "children";
+        const std::string children = "children";
         bool delimiter = false;
         bool is_weight = false;
-        string children_temp = "";
+        std::string children_temp = "";
         children_temp = extract_children_keyword(s, pos, delimiter, is_weight);
         //if there is a weight, check again skipping the weight
         if(is_weight){
@@ -283,7 +283,7 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
             if(children_temp != children)
                 throw parser_exception("Syntax error, found \"" + children_temp + "\" did you mean \"" + children + "\"?");
         } else {
-            string extracted_keyword = "";
+            std::string extracted_keyword = "";
             if(children_temp.size() >= children.size())
                 extracted_keyword = children_temp.substr(children_temp.size() - children.size(), children.size());
             else extracted_keyword = children_temp;
@@ -295,7 +295,7 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
     if constexpr (std::is_same<T, char>::value){
         (*label_size) = 0;
         children_misspell(s, pos);
-        string label_temp = extract_label(s, pos);
+        std::string label_temp = extract_label(s, pos);
         *label_weight_size = (*label_size) + WEIGHT_SIZE;
         if ((*label_size) == 1) {
             if(!isalpha(label_temp[0]))
@@ -308,7 +308,7 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
     if constexpr (std::is_same<T, std::string>::value){
         (*label_size) = 0;
         children_misspell(s, pos);
-        string label_temp = extract_label(s, pos);
+        std::string label_temp = extract_label(s, pos);
         (*label_weight_size) = (*label_size) + WEIGHT_SIZE;
         return label_temp; 
     }
@@ -316,7 +316,7 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
     if constexpr ((std::is_same<T, int>::value) || (std::is_same<T, bool>::value)){
         (*label_size) = 0;
         children_misspell(s, pos);
-        string label_temp = extract_label(s, pos);
+        std::string label_temp = extract_label(s, pos);
         *label_weight_size = *label_size + WEIGHT_SIZE;
         if ((*label_size) == 1) {
             if(!isdigit(label_temp[0]))
@@ -326,10 +326,10 @@ T parser_set_label(size_t* label_size, size_t* label_weight_size, size_t WEIGHT_
             throw parser_exception("Label on trie<int> should be a single digit, but found: " + label_temp);
     }
 
-    if constexpr (std::is_same<T, double>::value) {
+    if constexpr ((std::is_same<T, double>::value) || (std::is_same<T, float>::value)) {
         *label_size = 0;
         children_misspell(s, pos);
-        string label_temp = extract_label(s, pos);
+        std::string label_temp = extract_label(s, pos);
         *label_weight_size = *label_size + WEIGHT_SIZE;
         if((*label_size) == 3){
             if(!isdigit(label_temp[0]) || label_temp[1] != '.' || !isdigit(label_temp[2]))
@@ -485,9 +485,9 @@ void trie<T>::add_child(trie<T> const& c) {
         // Check for duplicate labels among sibling nodes
         for (const auto& child : m_c) {
             if (*(new_child.m_l) == *(child.m_l)) {
-                cout << "Duplicate label found:" << endl;
-                cout << "new child:" << endl << new_child << endl;
-                cout << "Existing child:" << endl << child << endl;
+                std::cout << "Duplicate label found:" << std::endl;
+                std::cout << "new child:" << std::endl << new_child << std::endl;
+                std::cout << "Existing child:" << std::endl << child << std::endl;
                 throw parser_exception("Duplicate label found in sibling nodes");
             }
         }

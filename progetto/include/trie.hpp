@@ -149,8 +149,6 @@ struct trie {
     /* facultative: path compression */
     void path_compress();
 
-    void print(std::ostream& os = std::cout, int depth = 0) const;
-
 private:
     trie<T>* m_p;      // parent
     T* m_l;            // label

@@ -188,7 +188,7 @@ void trie_bool(){
         if (!in_error.is_open()) {
             std::cerr << "Unable to open file" << std::endl;
         }
-        cout<<"Parsing trie<double> from file: datasets/trie_bool_error" + to_string(i) + ".tr"<<endl;
+        cout<<"Parsing trie<bool> from file: datasets/trie_bool_error" + to_string(i) + ".tr"<<endl;
 
         try {
             in_error >> t;
