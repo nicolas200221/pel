@@ -126,7 +126,7 @@ int constructor(const std::string& s, trie<T>& t) {
         size_t label_weight_size;
         size_t label_size = 0;
         //fix position if there were multiple node closing brackets before this one.
-        while(!isalpha(s[pos]) && s[pos - 1] == '}') pos++;
+        while((pos > 0) && (!isalpha(s[pos]) && s[pos - 1] == '}')) pos++;
         
         label = parser_set_label<T>(&label_size, &label_weight_size, WEIGHT_SIZE, pos, s);
 
